@@ -1,0 +1,50 @@
+{
+  "name": "private-price-bot",
+  "version": "1.0.0",
+  "description": "Privacy-first Telegram bot for crypto prices, alerts, and security checks",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "migrate": "tsx src/db/migrate.ts"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "crypto",
+    "price",
+    "privacy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "grammy": "^1.21.1",
+    "better-sqlite3": "^9.4.3",
+    "node-cron": "^3.0.3",
+    "undici": "^6.6.2",
+    "zod": "^3.22.4",
+    "dotenv": "^16.4.1",
+    "pino": "^8.18.0",
+    "pino-pretty": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.11.16",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "vitest": "^1.2.2",
+    "msw": "^2.1.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
