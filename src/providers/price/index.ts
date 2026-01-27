@@ -4,6 +4,7 @@ import { getCachedPrice, setCachedPrice } from '../../db/index.js';
 import { CoinGeckoProvider } from './coingecko.js';
 import { CoinCapProvider } from './coincap.js';
 import { BinanceProvider } from './binance.js';
+import { DexScreenerProvider } from './dexscreener.js';
 import type { PriceData, TokenInfo, PriceProvider } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
 
@@ -11,8 +12,10 @@ import type { SupportedChain } from '../../config/index.js';
 const providers: Map<string, PriceProvider> = new Map();
 
 // Initialize providers
+// Order matters: CoinGecko for listed tokens, DexScreener for new/DEX tokens
 function initProviders(): void {
   providers.set('coingecko', new CoinGeckoProvider());
+  providers.set('dexscreener', new DexScreenerProvider());
   providers.set('coincap', new CoinCapProvider());
   providers.set('binance', new BinanceProvider());
 }
@@ -26,9 +29,10 @@ function getProvider(name: string): PriceProvider | undefined {
 }
 
 // Get all providers in fallback order
+// CoinGecko first (established tokens), DexScreener second (new/DEX tokens), then others
 function getProviderOrder(): string[] {
   const primary = config.priceProvider;
-  const fallbacks = ['coingecko', 'coincap', 'binance'].filter(p => p !== primary);
+  const fallbacks = ['coingecko', 'dexscreener', 'coincap', 'binance'].filter(p => p !== primary);
   return [primary, ...fallbacks];
 }
 
@@ -170,4 +174,4 @@ export function clearPriceCache(): void {
 }
 
 // Export providers for direct access if needed
-export { CoinGeckoProvider, CoinCapProvider, BinanceProvider };
+export { CoinGeckoProvider, DexScreenerProvider, CoinCapProvider, BinanceProvider };
