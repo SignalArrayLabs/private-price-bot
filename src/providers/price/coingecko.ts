@@ -30,6 +30,7 @@ interface CoinGeckoCoinInfo {
 
 // Mapping common symbols to CoinGecko IDs
 const SYMBOL_TO_ID: Record<string, string> = {
+  // Major coins
   BTC: 'bitcoin',
   ETH: 'ethereum',
   BNB: 'binancecoin',
@@ -57,6 +58,45 @@ const SYMBOL_TO_ID: Record<string, string> = {
   NEAR: 'near',
   APT: 'aptos',
   SUI: 'sui',
+  // Solana ecosystem
+  PENGU: 'pudgy-penguins',
+  PENGUIN: 'pudgy-penguins',
+  BONK: 'bonk',
+  WIF: 'dogwifcoin',
+  JTO: 'jito-governance-token',
+  JUP: 'jupiter-exchange-solana',
+  PYTH: 'pyth-network',
+  RAY: 'raydium',
+  ORCA: 'orca',
+  MNGO: 'mango-markets',
+  SAMO: 'samoyedcoin',
+  FIDA: 'bonfida',
+  // Memecoins
+  FLOKI: 'floki',
+  WOJAK: 'wojak',
+  BRETT: 'brett',
+  MOG: 'mog-coin',
+  POPCAT: 'popcat',
+  // AI tokens
+  FET: 'fetch-ai',
+  RNDR: 'render-token',
+  AGIX: 'singularitynet',
+  OCEAN: 'ocean-protocol',
+  TAO: 'bittensor',
+  // Gaming
+  IMX: 'immutable-x',
+  GALA: 'gala',
+  AXS: 'axie-infinity',
+  SAND: 'the-sandbox',
+  MANA: 'decentraland',
+  // DeFi
+  AAVE: 'aave',
+  MKR: 'maker',
+  CRV: 'curve-dao-token',
+  SNX: 'havven',
+  COMP: 'compound-governance-token',
+  SUSHI: 'sushi',
+  CAKE: 'pancakeswap-token',
 };
 
 export class CoinGeckoProvider extends BasePriceProvider {
