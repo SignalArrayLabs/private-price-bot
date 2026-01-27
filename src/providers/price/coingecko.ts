@@ -2,6 +2,7 @@ import { BasePriceProvider } from './base.js';
 import type { PriceData, TokenInfo } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
 import { config, CHAIN_CONFIG } from '../../config/index.js';
+import { logger } from '../../utils/logger.js';
 
 interface CoinGeckoSearchResult {
   coins: Array<{
@@ -9,6 +10,7 @@ interface CoinGeckoSearchResult {
     symbol: string;
     name: string;
     thumb: string;
+    market_cap_rank: number | null;
   }>;
 }
 
@@ -28,9 +30,9 @@ interface CoinGeckoCoinInfo {
   last_updated?: string;
 }
 
-// Mapping common symbols to CoinGecko IDs
-const SYMBOL_TO_ID: Record<string, string> = {
-  // Major coins
+// Quick lookup cache for common symbols (optimization only, not required)
+// The bot will dynamically search CoinGecko for ANY token not in this list
+const COMMON_SYMBOLS: Record<string, string> = {
   BTC: 'bitcoin',
   ETH: 'ethereum',
   BNB: 'binancecoin',
@@ -46,58 +48,10 @@ const SYMBOL_TO_ID: Record<string, string> = {
   LTC: 'litecoin',
   AVAX: 'avalanche-2',
   LINK: 'chainlink',
-  UNI: 'uniswap',
-  ATOM: 'cosmos',
-  XLM: 'stellar',
-  ETC: 'ethereum-classic',
-  FIL: 'filecoin',
-  APE: 'apecoin',
-  PEPE: 'pepe',
-  ARB: 'arbitrum',
-  OP: 'optimism',
-  NEAR: 'near',
-  APT: 'aptos',
-  SUI: 'sui',
-  // Solana ecosystem
-  PENGU: 'pudgy-penguins',
-  PENGUIN: 'pudgy-penguins',
-  BONK: 'bonk',
-  WIF: 'dogwifcoin',
-  JTO: 'jito-governance-token',
-  JUP: 'jupiter-exchange-solana',
-  PYTH: 'pyth-network',
-  RAY: 'raydium',
-  ORCA: 'orca',
-  MNGO: 'mango-markets',
-  SAMO: 'samoyedcoin',
-  FIDA: 'bonfida',
-  // Memecoins
-  FLOKI: 'floki',
-  WOJAK: 'wojak',
-  BRETT: 'brett',
-  MOG: 'mog-coin',
-  POPCAT: 'popcat',
-  // AI tokens
-  FET: 'fetch-ai',
-  RNDR: 'render-token',
-  AGIX: 'singularitynet',
-  OCEAN: 'ocean-protocol',
-  TAO: 'bittensor',
-  // Gaming
-  IMX: 'immutable-x',
-  GALA: 'gala',
-  AXS: 'axie-infinity',
-  SAND: 'the-sandbox',
-  MANA: 'decentraland',
-  // DeFi
-  AAVE: 'aave',
-  MKR: 'maker',
-  CRV: 'curve-dao-token',
-  SNX: 'havven',
-  COMP: 'compound-governance-token',
-  SUSHI: 'sushi',
-  CAKE: 'pancakeswap-token',
 };
+
+// Runtime cache for dynamically discovered tokens
+const discoveredTokens: Map<string, string> = new Map();
 
 export class CoinGeckoProvider extends BasePriceProvider {
   name = 'CoinGecko';
@@ -127,17 +81,44 @@ export class CoinGeckoProvider extends BasePriceProvider {
         return await this.getPriceByContract(symbolOrAddress, chain);
       }
 
-      // Try to get by symbol
       const symbol = this.normalizeSymbol(symbolOrAddress);
-      const coinId = SYMBOL_TO_ID[symbol] || symbol.toLowerCase();
 
-      return await this.getPriceById(coinId, symbol);
+      // 1. Check common symbols cache
+      if (COMMON_SYMBOLS[symbol]) {
+        const result = await this.getPriceById(COMMON_SYMBOLS[symbol]);
+        if (result) return result;
+      }
+
+      // 2. Check runtime discovered tokens cache
+      if (discoveredTokens.has(symbol)) {
+        const result = await this.getPriceById(discoveredTokens.get(symbol)!);
+        if (result) return result;
+      }
+
+      // 3. Try direct lookup (symbol as ID)
+      const directResult = await this.getPriceById(symbol.toLowerCase());
+      if (directResult) {
+        // Cache for future lookups
+        discoveredTokens.set(symbol, symbol.toLowerCase());
+        return directResult;
+      }
+
+      // 4. Search CoinGecko for the token
+      const searchResult = await this.searchAndGetBestMatch(symbol);
+      if (searchResult) {
+        // Cache the discovered ID
+        discoveredTokens.set(symbol, searchResult.id);
+        return await this.getPriceById(searchResult.id);
+      }
+
+      return null;
     } catch (error) {
+      logger.debug({ symbol: symbolOrAddress, error }, 'Failed to get price');
       return null;
     }
   }
 
-  private async getPriceById(coinId: string, symbol: string): Promise<PriceData | null> {
+  private async getPriceById(coinId: string): Promise<PriceData | null> {
     try {
       const url = `${this.baseUrl}/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`;
       const data = await this.fetchWithTimeout<CoinGeckoCoinInfo>(url, {
@@ -161,13 +142,47 @@ export class CoinGeckoProvider extends BasePriceProvider {
         lastUpdated: data.last_updated ? new Date(data.last_updated) : new Date(),
       };
     } catch {
-      // Try searching for the coin
-      const searchResults = await this.searchToken(symbol);
-      if (searchResults.length > 0) {
-        const firstResult = searchResults[0];
-        // Recursively get price using found ID
-        return await this.getPriceById(firstResult.symbol.toLowerCase(), firstResult.symbol);
+      return null;
+    }
+  }
+
+  private async searchAndGetBestMatch(query: string): Promise<{ id: string; symbol: string } | null> {
+    try {
+      const url = `${this.baseUrl}/search?query=${encodeURIComponent(query)}`;
+      const data = await this.fetchWithTimeout<CoinGeckoSearchResult>(url, {
+        headers: this.getHeaders(),
+      });
+
+      if (!data.coins || data.coins.length === 0) {
+        return null;
       }
+
+      // Find best match:
+      // 1. Exact symbol match with highest market cap rank
+      // 2. Otherwise, first result (highest relevance)
+      const normalizedQuery = query.toUpperCase();
+
+      // Sort by market cap rank (lower is better, null goes to end)
+      const sortedCoins = data.coins.sort((a, b) => {
+        if (a.market_cap_rank === null && b.market_cap_rank === null) return 0;
+        if (a.market_cap_rank === null) return 1;
+        if (b.market_cap_rank === null) return -1;
+        return a.market_cap_rank - b.market_cap_rank;
+      });
+
+      // First, try to find exact symbol match
+      const exactMatch = sortedCoins.find(
+        coin => coin.symbol.toUpperCase() === normalizedQuery
+      );
+
+      if (exactMatch) {
+        return { id: exactMatch.id, symbol: exactMatch.symbol };
+      }
+
+      // Otherwise return the first result
+      const firstCoin = sortedCoins[0];
+      return { id: firstCoin.id, symbol: firstCoin.symbol };
+    } catch {
       return null;
     }
   }
@@ -184,6 +199,9 @@ export class CoinGeckoProvider extends BasePriceProvider {
       if (!data.market_data?.current_price?.usd) {
         return null;
       }
+
+      // Cache the discovered token
+      discoveredTokens.set(data.symbol.toUpperCase(), data.id);
 
       return {
         symbol: data.symbol.toUpperCase(),
@@ -223,7 +241,6 @@ export class CoinGeckoProvider extends BasePriceProvider {
 
   async isHealthy(): Promise<boolean> {
     if (this.isDown) {
-      // Check if enough time has passed for retry
       if (this.downSince && Date.now() - this.downSince.getTime() < this.backoffMs) {
         return false;
       }
