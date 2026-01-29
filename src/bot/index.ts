@@ -107,6 +107,24 @@ export async function startBot(bot: Bot): Promise<void> {
     firstName: me.first_name,
   }, 'Bot starting');
 
+  // Set bot commands menu (visible in Telegram)
+  await bot.api.setMyCommands([
+    { command: 'p', description: 'Quick price lookup - /p BTC' },
+    { command: 'price', description: 'Full price card - /price ETH' },
+    { command: 'chart', description: 'Price chart link' },
+    { command: 'alert', description: 'Manage price alerts' },
+    { command: 'watch', description: 'Manage watchlist' },
+    { command: 'call', description: 'Make a token call' },
+    { command: 'calls', description: 'View recent calls' },
+    { command: 'lb', description: 'Leaderboard' },
+    { command: 'scan', description: 'Security scan - /scan 0x...' },
+    { command: 'help', description: 'Show all commands' },
+    { command: 'privacy', description: 'Privacy policy' },
+    { command: 'status', description: 'Bot status' },
+  ]);
+
+  logger.info('Bot commands menu registered');
+
   // Start polling
   await bot.start({
     onStart: (botInfo) => {
