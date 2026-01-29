@@ -4,9 +4,11 @@ node_modules/
 # Build output
 dist/
 
-# Environment variables
+# Environment variables (contain secrets - never commit!)
 .env
 .env.local
+.env.development
+.env.production
 .env.*.local
 
 # Database

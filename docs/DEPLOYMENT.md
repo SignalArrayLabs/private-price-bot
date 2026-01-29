@@ -91,12 +91,87 @@ SQLITE_PATH=./data/bot.db
 
 ## Development vs Production
 
-| Environment | Bot Token | Method | Location |
-|-------------|-----------|--------|----------|
-| **Production** | Main token | Polling/PM2 | Hetzner server |
-| **Development** | Dev token (separate bot) | Polling/npm run dev | Local MacBook |
+| Environment | Bot | Token | Location | Command |
+|-------------|-----|-------|----------|---------|
+| **Production** | @SignalArrayPriceBot | Production | Hetzner | `npm run start:prod` |
+| **Development** | @SignalArrayPriceDevBot | Dev | MacBook | `npm run dev` |
 
 **IMPORTANT**: You cannot run two instances with the same bot token. Use separate bot tokens for dev and production.
+
+## Development Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     MACBOOK (Development)                       │
+│                                                                 │
+│  1. Write code                                                  │
+│  2. npm run dev  (uses @SignalArrayPriceDevBot)                │
+│  3. Test in Telegram with DEV bot                              │
+│  4. Confirm working                                             │
+│  5. git add . && git commit && git push                        │
+│                                                                 │
+└───────────────────────────────────────────────────────────────┬─┘
+                                                                │
+                                                           git push
+                                                                │
+                                                                ▼
+                                                         ┌─────────────┐
+                                                         │   GitHub    │
+                                                         └──────┬──────┘
+                                                                │
+                                                           git pull
+                                                                │
+                                                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     HETZNER (Production)                        │
+│                                                                 │
+│  1. ssh root@116.203.227.198                                   │
+│  2. cd /root/bots/private-price-bot                            │
+│  3. git pull                                                    │
+│  4. npm install (if deps changed)                              │
+│  5. pm2 restart private-price-bot                              │
+│                                                                 │
+│  Production bot runs 24/7: @SignalArrayPriceBot                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Quick Reference Commands
+
+### Local Development (MacBook)
+```bash
+cd ~/Projects/private-price-bot
+npm run dev                    # Start dev bot
+# Test with @SignalArrayPriceDevBot in Telegram
+git add . && git commit -m "feat: description" && git push
+```
+
+### Deploy to Production (Hetzner)
+```bash
+ssh root@116.203.227.198
+cd /root/bots/private-price-bot
+git pull
+npm install                    # Only if package.json changed
+pm2 restart private-price-bot
+pm2 logs private-price-bot     # Verify it started
+```
+
+## Environment Files
+
+Create these files (they're gitignored for security):
+
+### .env.development (MacBook)
+```bash
+TELEGRAM_BOT_TOKEN=<dev-bot-token>
+SQLITE_PATH=./data/bot-dev.db
+LOG_LEVEL=debug
+```
+
+### .env.production (Hetzner)
+```bash
+TELEGRAM_BOT_TOKEN=<production-bot-token>
+SQLITE_PATH=./data/bot.db
+LOG_LEVEL=info
+```
 
 ## Monitoring
 
