@@ -17,6 +17,7 @@
 11. [Security Considerations](#security-considerations)
 12. [Error Handling](#error-handling)
 13. [Deployment](#deployment)
+14. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -920,6 +921,38 @@ Provider Failure
   "cacheSize": 234
 }
 ```
+
+---
+
+## Future Enhancements
+
+> Items to consider for future development. **Do not implement unless explicitly requested.**
+
+### Potential Additions
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| More chains | Solana, Arbitrum, Base, Avalanche support | Medium |
+| Inline keyboard buttons | Refresh, Set Alert, Security buttons on price cards | Low |
+| Webhook mode | Switch from polling to webhooks for lower latency | Low |
+| CoinMarketCap provider | Add CMC as price provider option | Low |
+| Portfolio tracking | Track user portfolios (opt-in) | Low |
+| Chart images | Generate price chart images | Low |
+
+### Not Planned
+
+| Feature | Reason |
+|---------|--------|
+| Admin permissions | Violates core privacy principle |
+| Message reading | Violates core privacy principle |
+| User tracking beyond leaderboard | Violates core privacy principle |
+| Paid subscription features | Not in current scope |
+
+### How to Request Features
+
+1. User explicitly requests feature
+2. Feature is added to this table with priority
+3. When approved for development, follow [Development Rules](#development-rules)
 
 ---
 

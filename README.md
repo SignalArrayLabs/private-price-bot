@@ -1,6 +1,12 @@
 # Private Price Bot
 
+> **The core purpose of this bot is privacy.** Unlike typical Telegram bots that require admin permissions and read every message in your group, this bot does neither. It only responds to explicit commands - it cannot and does not read your group conversations.
+
 A **privacy-first** Telegram bot for crypto prices, alerts, leaderboards, and token security checks.
+
+## Why This Bot Exists
+
+Most crypto price bots require admin permissions and can read all messages in your group. This creates privacy and security risks. This bot was built to provide the same functionality **without compromising your group's privacy**.
 
 ## Executive Summary
 
