@@ -99,6 +99,76 @@ Before building any feature:
 ASK, don't assume.
 ```
 
+### 7. Source of Truth & Workflow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SOURCE OF TRUTH                           │
+│                                                              │
+│              GitHub repo, `main` branch                      │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+                           │
+          ┌────────────────┴────────────────┐
+          ▼                                 ▼
+   ┌─────────────┐                  ┌─────────────┐
+   │   Hetzner   │    pulls from    │   Your Mac  │
+   │   (prod)    │◄── main branch ──│    (dev)    │
+   │             │                  │             │
+   └─────────────┘                  └─────────────┘
+```
+
+**Workflow:**
+
+| Step | Where | What |
+|------|-------|------|
+| 1. Sync | Mac | `git checkout main && git pull origin main` |
+| 2. Branch | Mac | `git checkout -b feature/xyz` |
+| 3. Develop | Mac | Make changes |
+| 4. Test | Mac | `npm run dev` (uses dev bot) |
+| 5. Merge | Mac | `git checkout main && git merge feature/xyz` |
+| 6. Push | Mac | `git push origin main` |
+| 7. Deploy | Hetzner | `git pull origin main && pm2 restart private-price-bot` |
+
+**Key Rules:**
+- `main` is always production-ready
+- Never push directly to `main` without testing on dev first
+- Hetzner only ever pulls `main`
+- Before creating any branch: `git fetch origin && git checkout origin/main`
+- Before starting dev work: verify branch is in sync with main
+
+### 8. Documentation Structure
+
+```
+private-price-bot/
+├── README.md              → Entry point (what it does, how to run)
+├── PLANNING.md            → SINGLE SOURCE OF TRUTH
+│                            ├── Development Rules (this section)
+│                            ├── Privacy Architecture
+│                            ├── System Architecture
+│                            ├── Data Models
+│                            ├── Provider Layer
+│                            ├── Command Reference
+│                            ├── API Quotas & Rate Limits
+│                            └── Future Enhancements
+└── docs/
+    ├── INFRASTRUCTURE.md  → Ops runbook (Hetzner, SSH, PM2, deploy)
+    ├── TESTING.md         → Test strategy
+    └── CHANGELOG.md       → Version history
+```
+
+**What Goes Where:**
+
+| Question | Document |
+|----------|----------|
+| How do I run the bot? | README.md |
+| What's the architecture? | PLANNING.md |
+| What APIs do we use? | PLANNING.md → Provider Layer |
+| What's the dev workflow? | PLANNING.md → Section 7 |
+| How do I deploy to Hetzner? | docs/INFRASTRUCTURE.md |
+| What features are planned? | PLANNING.md → Future Enhancements |
+| What scope is allowed? | PLANNING.md → Development Rules |
+
 ---
 
 ## Privacy Architecture
