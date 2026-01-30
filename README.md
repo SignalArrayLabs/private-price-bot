@@ -366,8 +366,9 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Links
 
-- [PLANNING.md](./PLANNING.md) - Architecture documentation
-- [docs/TESTING.md](./docs/TESTING.md) - Testing strategy
+- [PLANNING.md](./PLANNING.md) - Architecture, providers, quotas, dev rules (single source of truth)
+- [docs/INFRASTRUCTURE.md](./docs/INFRASTRUCTURE.md) - Deployment/ops runbook (Hetzner, SSH, PM2)
+- [docs/TESTING.md](./docs/TESTING.md) - Test strategy
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) - Version history
 
 ---

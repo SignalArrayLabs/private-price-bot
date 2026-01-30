@@ -1,21 +1,22 @@
 # Private Price Bot - Architecture & Planning Document
 
-> **Single Source of Truth** for architecture decisions, data flows, provider configurations, and API quotas.
+> **Single Source of Truth** for architecture decisions, data flows, provider configurations, API quotas, and development rules.
 
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
-2. [Privacy Architecture](#privacy-architecture)
-3. [System Architecture](#system-architecture)
-4. [Data Models](#data-models)
-5. [Provider Layer](#provider-layer)
-6. [Command Reference](#command-reference)
-7. [API Quotas & Rate Limits](#api-quotas--rate-limits)
-8. [Caching Strategy](#caching-strategy)
-9. [Scheduler Jobs](#scheduler-jobs)
-10. [Security Considerations](#security-considerations)
-11. [Error Handling](#error-handling)
-12. [Deployment](#deployment)
+2. [Development Rules](#development-rules)
+3. [Privacy Architecture](#privacy-architecture)
+4. [System Architecture](#system-architecture)
+5. [Data Models](#data-models)
+6. [Provider Layer](#provider-layer)
+7. [Command Reference](#command-reference)
+8. [API Quotas & Rate Limits](#api-quotas--rate-limits)
+9. [Caching Strategy](#caching-strategy)
+10. [Scheduler Jobs](#scheduler-jobs)
+11. [Security Considerations](#security-considerations)
+12. [Error Handling](#error-handling)
+13. [Deployment](#deployment)
 
 ---
 
@@ -39,6 +40,63 @@ A privacy-first Telegram group bot providing crypto price lookups, alerts, leade
 - Ethereum (ETH)
 - BNB Smart Chain (BSC)
 - Polygon (MATIC)
+
+---
+
+## Development Rules
+
+> **CRITICAL**: These rules ensure consistency and prevent scope creep.
+
+### 1. Spec-Only Development
+
+- **Only implement what is explicitly requested**
+- No "helpful additions" or "nice to have" features
+- No assumptions about what the user might want
+- If unsure, ASK before building
+
+### 2. Confirmation Before Implementation
+
+Before building any feature:
+1. List exactly what will be implemented
+2. Wait for user confirmation
+3. Build only what was confirmed
+
+### 3. No Over-Engineering
+
+- Keep solutions simple and focused
+- Don't add error handling for impossible scenarios
+- Don't create abstractions for one-time operations
+- Don't design for hypothetical future requirements
+
+### 4. Change Process
+
+| Step | Action |
+|------|--------|
+| 1 | User requests feature |
+| 2 | Developer lists exact changes |
+| 3 | User confirms or modifies |
+| 4 | Developer implements confirmed scope only |
+| 5 | User tests |
+| 6 | Commit and push |
+
+### 5. Code Boundaries
+
+**DO:**
+- Implement requested commands
+- Fix bugs when reported
+- Refactor only when asked
+
+**DON'T:**
+- Add extra buttons or UI elements
+- Add features "while you're at it"
+- Expand scope without permission
+- Add comments/docs unless requested
+
+### 6. When in Doubt
+
+```
+ASK, don't assume.
+```
 
 ---
 

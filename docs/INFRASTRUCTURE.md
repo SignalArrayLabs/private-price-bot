@@ -1,4 +1,8 @@
-# Deployment Guide - Hetzner Server
+# Infrastructure & Deployment
+
+> Deployment/ops runbook for Hetzner server, SSH access, and process management.
+
+---
 
 ## Server Details
 
@@ -6,97 +10,32 @@
 |----------|-------|
 | **Provider** | Hetzner Cloud |
 | **Project** | signal-array-bots |
-| **Server ID** | #118552499 |
 | **Server Name** | ubuntu-8gb-nbg1-1 |
 | **IPv4** | 116.203.227.198 |
-| **IPv6** | 2a01:4f8:1c0c:43a5::/64 |
 | **Specs** | 4 VCPU, 8GB RAM, 160GB Disk |
 | **Cost** | €12.90/month |
 | **Location** | Nuremberg, Germany (nbg1-dc3) |
-| **Network Zone** | eu-central |
+
+---
 
 ## SSH Access
 
 ```bash
 ssh root@116.203.227.198
-# or
-ssh root@ubuntu-8gb-nbg1-1
 ```
 
-## Deployed Bots
+---
 
-This server hosts multiple Signal Array bots:
-
-| Bot | Directory | Status |
-|-----|-----------|--------|
-| private-price-bot | `/root/bots/private-price-bot` | TBD |
-| (other bots) | TBD | TBD |
-
-## Process Manager
-
-**Using PM2** (recommended for Node.js bots):
-
-```bash
-# View running bots
-pm2 list
-
-# Stop a bot
-pm2 stop private-price-bot
-
-# Start a bot
-pm2 start private-price-bot
-
-# Restart a bot
-pm2 restart private-price-bot
-
-# View logs
-pm2 logs private-price-bot
-
-# Save process list (survives reboot)
-pm2 save
-```
-
-## Deployment Process
-
-### Manual Deploy (git pull)
-
-```bash
-# SSH into server
-ssh root@116.203.227.198
-
-# Navigate to project
-cd /root/bots/private-price-bot
-
-# Pull latest code
-git pull origin claude/telegram-privacy-bot-ds57Y
-
-# Install dependencies (if package.json changed)
-npm install
-
-# Restart bot
-pm2 restart private-price-bot
-```
-
-### Environment Variables
-
-Production `.env` file location: `/root/bots/private-price-bot/.env`
-
-Key variables:
-```
-TELEGRAM_BOT_TOKEN=<production token>
-PRICE_PROVIDER=coingecko
-LOG_LEVEL=info
-SQLITE_PATH=./data/bot.db
-```
-
-## Development vs Production
+## Dev/Prod Environments
 
 | Environment | Bot | Token | Location | Command |
 |-------------|-----|-------|----------|---------|
 | **Production** | @SignalArrayPriceBot | Production | Hetzner | `npm run start:prod` |
 | **Development** | @SignalArrayPriceDevBot | Dev | MacBook | `npm run dev` |
 
-**IMPORTANT**: You cannot run two instances with the same bot token. Use separate bot tokens for dev and production.
+**IMPORTANT**: Cannot run two instances with the same token. Use separate bot tokens.
+
+---
 
 ## Development Pipeline
 
@@ -109,7 +48,6 @@ SQLITE_PATH=./data/bot.db
 │  3. Test in Telegram with DEV bot                              │
 │  4. Confirm working                                             │
 │  5. git add . && git commit && git push                        │
-│                                                                 │
 └───────────────────────────────────────────────────────────────┬─┘
                                                                 │
                                                            git push
@@ -135,75 +73,183 @@ SQLITE_PATH=./data/bot.db
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Quick Reference Commands
+---
 
-### Local Development (MacBook)
+## Local Setup (MacBook)
+
+### 1. Create Dev Bot
+
+1. Message `@BotFather` on Telegram
+2. Send `/newbot`
+3. Name it (e.g., "SignalArrayPriceDevBot")
+4. Save the token
+
+### 2. Configure Environment
+
 ```bash
-cd ~/Projects/private-price-bot
-npm run dev                    # Start dev bot
-# Test with @SignalArrayPriceDevBot in Telegram
-git add . && git commit -m "feat: description" && git push
+cp .env.example .env.development
+
+# Edit .env.development
+nano .env.development
 ```
 
-### Deploy to Production (Hetzner)
-```bash
-ssh root@116.203.227.198
-cd /root/bots/private-price-bot
-git pull
-npm install                    # Only if package.json changed
-pm2 restart private-price-bot
-pm2 logs private-price-bot     # Verify it started
+Contents:
 ```
-
-## Environment Files
-
-Create these files (they're gitignored for security):
-
-### .env.development (MacBook)
-```bash
 TELEGRAM_BOT_TOKEN=<dev-bot-token>
 SQLITE_PATH=./data/bot-dev.db
 LOG_LEVEL=debug
 ```
 
-### .env.production (Hetzner)
+### 3. Run Dev Bot
+
 ```bash
+npm run dev
+```
+
+### 4. Test
+
+Open Telegram → @YourDevBot → `/p BTC`
+
+---
+
+## Production Deployment (Hetzner)
+
+### Initial Setup
+
+```bash
+# SSH into server
+ssh root@116.203.227.198
+
+# Create bot directory
+mkdir -p /root/bots
+cd /root/bots
+
+# Clone repo
+git clone https://github.com/SignalArrayLabs/private-price-bot.git
+cd private-price-bot
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Create production env
+cp .env.example .env
+nano .env  # Add production token
+```
+
+### PM2 Process Manager
+
+```bash
+# Start bot
+pm2 start dist/index.js --name private-price-bot
+
+# Save process list (survives reboot)
+pm2 save
+pm2 startup
+```
+
+### Deploy Updates
+
+```bash
+ssh root@116.203.227.198
+cd /root/bots/private-price-bot
+git pull
+npm install        # Only if package.json changed
+npm run build      # Only if TypeScript changed
+pm2 restart private-price-bot
+```
+
+---
+
+## PM2 Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `pm2 list` | View running bots |
+| `pm2 logs private-price-bot` | View logs |
+| `pm2 logs private-price-bot --lines 50` | Last 50 lines |
+| `pm2 restart private-price-bot` | Restart bot |
+| `pm2 stop private-price-bot` | Stop bot |
+| `pm2 delete private-price-bot` | Remove from PM2 |
+
+---
+
+## Environment Files
+
+### .env.development (MacBook - gitignored)
+```
+TELEGRAM_BOT_TOKEN=<dev-bot-token>
+PRICE_PROVIDER=coingecko
+SQLITE_PATH=./data/bot-dev.db
+LOG_LEVEL=debug
+```
+
+### .env.production (Hetzner - gitignored)
+```
 TELEGRAM_BOT_TOKEN=<production-bot-token>
+PRICE_PROVIDER=coingecko
 SQLITE_PATH=./data/bot.db
 LOG_LEVEL=info
 ```
 
+---
+
 ## Monitoring
 
-### Check if bot is running
+### Check Status
 ```bash
 pm2 status
 ```
 
-### View recent logs
+### View Logs
 ```bash
-pm2 logs private-price-bot --lines 50
+pm2 logs private-price-bot --lines 100
 ```
 
-### Check system resources
+### System Resources
 ```bash
 htop
 ```
 
+---
+
 ## Firewall
 
-Hetzner firewall should allow:
-- SSH (port 22)
-- HTTPS outbound (for Telegram API, CoinGecko, DexScreener)
+Required:
+- SSH (port 22) - inbound
+- HTTPS (port 443) - outbound (Telegram API, CoinGecko, DexScreener)
 
-No inbound ports needed for polling mode. If using webhooks, open port 443.
+No inbound ports needed for polling mode.
+
+---
+
+## Troubleshooting
+
+### Bot not responding
+1. Check token in `.env`
+2. Verify bot is running: `pm2 status`
+3. Check logs: `pm2 logs private-price-bot`
+
+### 409 Conflict error
+Two instances running with same token. Stop one:
+- Local: `Ctrl+C`
+- Server: `pm2 stop private-price-bot`
+
+### Permission denied
+```bash
+mkdir -p data
+chmod 755 data
+```
 
 ---
 
 ## Hetzner Console
 
-- **URL**: https://console.hetzner.cloud/projects/13247557/servers/118552499/overview
-- **Actions**: Start, Stop, Restart, Rescue, Delete available in console
+**URL**: https://console.hetzner.cloud/projects/13247557/servers/118552499/overview
+
+Actions available: Start, Stop, Restart, Rescue, Delete
 
 ---
 
