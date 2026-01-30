@@ -32,7 +32,7 @@ This bot replicates major utility of popular group price bots (prices, alerts, l
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/private-price-bot.git
+git clone https://github.com/SignalArrayLabs/private-price-bot.git
 cd private-price-bot
 
 # Install dependencies
