@@ -171,14 +171,19 @@ git status  # Should show: "nothing to commit, working tree clean"
 
 **Step 3.1: Delete remote feature branch**
 ```bash
-git push origin --delete claude/telegram-privacy-bot-ds57Y
-# Delete the original feature branch
+# NOTE: This will fail with 403 from Claude Code sessions
+# git push origin --delete claude/telegram-privacy-bot-ds57Y
+
+# Instead: Manual cleanup via GitHub UI or let GitHub Actions handle it
+# The workflow will delete feature branches after merging to main
 ```
 
 **Step 3.2: Delete local feature branch**
 ```bash
 git branch -D claude/diagnose-branch-drift-tl6FB
 # Delete the diagnostic branch (we're now on main)
+
+# NOTE: Can only be done after switching away from the branch
 ```
 
 **Step 3.3: Prune stale references**
