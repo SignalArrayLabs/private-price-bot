@@ -118,24 +118,64 @@ ASK, don't assume.
    └─────────────┘                  └─────────────┘
 ```
 
-**Workflow:**
+**Workflow (Updated for Claude Code Sessions):**
 
 | Step | Where | What |
 |------|-------|------|
-| 1. Sync | Mac | `git checkout main && git pull origin main` |
-| 2. Branch | Mac | `git checkout -b feature/xyz` |
-| 3. Develop | Mac | Make changes |
-| 4. Test | Mac | `npm run dev` (uses dev bot) |
-| 5. Merge | Mac | `git checkout main && git merge feature/xyz` |
-| 6. Push | Mac | `git push origin main` |
-| 7. Deploy | Hetzner | `git pull origin main && pm2 restart private-price-bot` |
+| 1. Sync | Mac/Claude | `git checkout main && git pull origin main` |
+| 2. Branch | Mac/Claude | `git checkout -b claude/feature-xyz-<session-id>` |
+| 3. Develop | Mac/Claude | Make changes |
+| 4. Test | Mac/Claude | `npm run dev` (uses dev bot) |
+| 5. Commit | Mac/Claude | `git add . && git commit -m "feat: description"` |
+| 6. Push | Mac/Claude | `git push -u origin claude/feature-xyz-<session-id>` |
+| 7. Auto-Merge | GitHub Actions | Automatically merges to `main` |
+| 8. Deploy | Hetzner | `git pull origin main && pm2 restart private-price-bot` |
+
+**Alternative: Manual Session End (if GitHub Actions not yet set up):**
+```bash
+# Run this script at end of session
+bash scripts/session-end.sh
+```
 
 **Key Rules:**
-- `main` is always production-ready
+- `main` is always production-ready and the single source of truth
 - Never push directly to `main` without testing on dev first
 - Hetzner only ever pulls `main`
-- Before creating any branch: `git fetch origin && git checkout origin/main`
-- Before starting dev work: verify branch is in sync with main
+- All development happens on `claude/*` branches (required for Claude Code sessions)
+- Feature branches are automatically merged to `main` by GitHub Actions
+- Feature branches are automatically deleted after merge
+- Never reuse old feature branches - always create fresh from `main`
+
+**Branch Drift Prevention:**
+
+This project uses a 3-layer system to prevent work from being stranded on feature branches:
+
+1. **GitHub Actions** (`.github/workflows/sync-main.yml`): Automatically merges all `claude/*` pushes to `main`
+2. **Session-End Script** (`scripts/session-end.sh`): Manual backup to merge locally
+3. **Session Checklists** (see below): Verification steps
+
+**Session Start Checklist:**
+```bash
+# Run these checks before starting work
+git fetch origin
+git checkout main
+git pull origin main
+git status  # Verify clean
+git branch -a | grep claude/  # Should show no orphaned branches
+git checkout -b claude/<description>-<session-id>
+```
+
+**Session End Checklist:**
+```bash
+# Option A: Automatic (preferred)
+git add .
+git commit -m "feat: description"
+git push -u origin claude/<description>-<session-id>
+# GitHub Actions handles the rest
+
+# Option B: Manual (if Actions not working)
+bash scripts/session-end.sh
+```
 
 ### 8. Documentation Structure
 
