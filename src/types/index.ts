@@ -148,3 +148,98 @@ export interface CacheEntry<T> {
   fetchedAt: Date;
   ttlSeconds: number;
 }
+
+// Gas data types
+export interface GasData {
+  chain: SupportedChain;
+  low: number;
+  average: number;
+  fast: number;
+  baseFee?: number;
+  lastBlock?: number;
+  lastUpdated: Date;
+}
+
+// Trending token types
+export interface TrendingToken {
+  id: string;
+  symbol: string;
+  name: string;
+  marketCapRank: number | null;
+  thumb?: string;
+  price?: number;
+  priceChangePercent24h?: number;
+}
+
+// All-time high data
+export interface ATHData {
+  symbol: string;
+  name: string;
+  currentPrice: number;
+  ath: number;
+  athChangePercent: number;
+  athDate: Date;
+}
+
+// Fear & Greed Index
+export interface FearGreedData {
+  value: number;
+  classification: string;
+  timestamp: Date;
+  previousValue?: number;
+  previousClassification?: string;
+}
+
+// Top mover token
+export interface MoverToken {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  priceChangePercent24h: number;
+  marketCap: number;
+  volume24h: number;
+}
+
+// Currency conversion result
+export interface ConvertResult {
+  amount: number;
+  fromSymbol: string;
+  toSymbol: string;
+  fromPrice: number;
+  toPrice: number;
+  result: number;
+  rate: number;
+}
+
+// Authorization types
+export type AuthorizationType = 'stripe_card' | 'stripe_crypto' | 'manual';
+
+export interface AuthorizedUser {
+  id: number;
+  tgUserId: number;
+  username?: string;
+  authorizationType: AuthorizationType;
+  stripePaymentId?: string;
+  amountPaid?: number;
+  authorizedAt: Date;
+  authorizedBy?: number;
+  notes?: string;
+}
+
+// Payment transaction types
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'expired';
+
+export interface PaymentTransaction {
+  id: number;
+  tgUserId: number;
+  stripeSessionId: string;
+  stripePaymentIntentId?: string;
+  paymentMethod?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  createdAt: Date;
+  completedAt?: Date;
+  username?: string;
+}

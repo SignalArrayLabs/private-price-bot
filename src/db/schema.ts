@@ -1,7 +1,7 @@
 // SQLite schema definitions
 // Note: This bot stores ONLY command data and derived stats, NOT message content
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES_SQL = `
 -- Groups table: stores group configuration
@@ -99,10 +99,50 @@ CREATE INDEX IF NOT EXISTS idx_token_cache_ref ON token_cache(token_ref, chain);
 CREATE INDEX IF NOT EXISTS idx_token_cache_fetched ON token_cache(fetched_at);
 `;
 
+// Migration 2: Add authorized_users and payment_transactions tables
+export const MIGRATION_2_ACCESS_CONTROL = `
+-- Authorized users table: tracks who has access to the bot
+CREATE TABLE IF NOT EXISTS authorized_users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tg_user_id INTEGER UNIQUE NOT NULL,
+  username TEXT,
+  authorization_type TEXT NOT NULL CHECK (authorization_type IN ('stripe_card', 'stripe_crypto', 'manual')),
+  stripe_payment_id TEXT,
+  amount_paid REAL,
+  authorized_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  authorized_by INTEGER,
+  notes TEXT
+);
+
+-- Payment transactions table: tracks all payment attempts and completions
+CREATE TABLE IF NOT EXISTS payment_transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tg_user_id INTEGER NOT NULL,
+  stripe_session_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT,
+  payment_method TEXT,
+  amount REAL,
+  currency TEXT DEFAULT 'usd',
+  status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'expired')),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  completed_at DATETIME
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_authorized_users_tg_user_id ON authorized_users(tg_user_id);
+CREATE INDEX IF NOT EXISTS idx_authorized_users_type ON authorized_users(authorization_type);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_tg_user_id ON payment_transactions(tg_user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_session ON payment_transactions(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
+`;
+
 export const MIGRATIONS: { version: number; sql: string }[] = [
   {
     version: 1,
     sql: CREATE_TABLES_SQL,
   },
-  // Future migrations will be added here
+  {
+    version: 2,
+    sql: MIGRATION_2_ACCESS_CONTROL,
+  },
 ];

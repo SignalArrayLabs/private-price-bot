@@ -12,6 +12,8 @@ import type {
   WatchlistItem,
   CacheEntry,
   PriceData,
+  AuthorizedUser,
+  PaymentTransaction,
 } from '../types/index.js';
 
 let db: Database.Database | null = null;
@@ -548,4 +550,326 @@ export function setProviderState(key: string, value: string): void {
   database
     .prepare('INSERT OR REPLACE INTO provider_state (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)')
     .run(key, value);
+}
+
+// ============ Authorization Operations ============
+
+export type AuthorizationType = 'stripe_card' | 'stripe_crypto' | 'manual';
+
+export function isUserAuthorized(tgUserId: number): boolean {
+  const database = getDb();
+  const row = database
+    .prepare('SELECT id FROM authorized_users WHERE tg_user_id = ?')
+    .get(tgUserId);
+  return row !== undefined;
+}
+
+export function getAuthorizedUser(tgUserId: number): AuthorizedUser | null {
+  const database = getDb();
+  const row = database
+    .prepare('SELECT * FROM authorized_users WHERE tg_user_id = ?')
+    .get(tgUserId) as {
+      id: number;
+      tg_user_id: number;
+      username: string | null;
+      authorization_type: string;
+      stripe_payment_id: string | null;
+      amount_paid: number | null;
+      authorized_at: string;
+      authorized_by: number | null;
+      notes: string | null;
+    } | undefined;
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    tgUserId: row.tg_user_id,
+    username: row.username ?? undefined,
+    authorizationType: row.authorization_type as AuthorizationType,
+    stripePaymentId: row.stripe_payment_id ?? undefined,
+    amountPaid: row.amount_paid ?? undefined,
+    authorizedAt: new Date(row.authorized_at),
+    authorizedBy: row.authorized_by ?? undefined,
+    notes: row.notes ?? undefined,
+  };
+}
+
+export function authorizeUser(
+  tgUserId: number,
+  authorizationType: AuthorizationType,
+  options?: {
+    username?: string;
+    stripePaymentId?: string;
+    amountPaid?: number;
+    authorizedBy?: number;
+    notes?: string;
+  }
+): AuthorizedUser {
+  const database = getDb();
+
+  // Check if already authorized
+  const existing = getAuthorizedUser(tgUserId);
+  if (existing) {
+    return existing;
+  }
+
+  const result = database
+    .prepare(`
+      INSERT INTO authorized_users (tg_user_id, username, authorization_type, stripe_payment_id, amount_paid, authorized_by, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+    .run(
+      tgUserId,
+      options?.username ?? null,
+      authorizationType,
+      options?.stripePaymentId ?? null,
+      options?.amountPaid ?? null,
+      options?.authorizedBy ?? null,
+      options?.notes ?? null
+    );
+
+  return {
+    id: result.lastInsertRowid as number,
+    tgUserId,
+    username: options?.username,
+    authorizationType,
+    stripePaymentId: options?.stripePaymentId,
+    amountPaid: options?.amountPaid,
+    authorizedAt: new Date(),
+    authorizedBy: options?.authorizedBy,
+    notes: options?.notes,
+  };
+}
+
+export function revokeUserAuthorization(tgUserId: number): boolean {
+  const database = getDb();
+  const result = database
+    .prepare('DELETE FROM authorized_users WHERE tg_user_id = ?')
+    .run(tgUserId);
+  return result.changes > 0;
+}
+
+export function getAllAuthorizedUsers(): AuthorizedUser[] {
+  const database = getDb();
+  const rows = database
+    .prepare('SELECT * FROM authorized_users ORDER BY authorized_at DESC')
+    .all() as Array<{
+      id: number;
+      tg_user_id: number;
+      username: string | null;
+      authorization_type: string;
+      stripe_payment_id: string | null;
+      amount_paid: number | null;
+      authorized_at: string;
+      authorized_by: number | null;
+      notes: string | null;
+    }>;
+
+  return rows.map(row => ({
+    id: row.id,
+    tgUserId: row.tg_user_id,
+    username: row.username ?? undefined,
+    authorizationType: row.authorization_type as AuthorizationType,
+    stripePaymentId: row.stripe_payment_id ?? undefined,
+    amountPaid: row.amount_paid ?? undefined,
+    authorizedAt: new Date(row.authorized_at),
+    authorizedBy: row.authorized_by ?? undefined,
+    notes: row.notes ?? undefined,
+  }));
+}
+
+export function getAuthorizationStats(): {
+  total: number;
+  byType: Record<AuthorizationType, number>;
+} {
+  const database = getDb();
+
+  const total = (database
+    .prepare('SELECT COUNT(*) as count FROM authorized_users')
+    .get() as { count: number }).count;
+
+  const byTypeRows = database
+    .prepare('SELECT authorization_type, COUNT(*) as count FROM authorized_users GROUP BY authorization_type')
+    .all() as Array<{ authorization_type: string; count: number }>;
+
+  const byType: Record<AuthorizationType, number> = {
+    stripe_card: 0,
+    stripe_crypto: 0,
+    manual: 0,
+  };
+
+  byTypeRows.forEach(row => {
+    byType[row.authorization_type as AuthorizationType] = row.count;
+  });
+
+  return { total, byType };
+}
+
+// ============ Payment Transaction Operations ============
+
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'expired';
+
+export function createPaymentTransaction(
+  tgUserId: number,
+  stripeSessionId: string,
+  amount: number,
+  currency = 'usd'
+): PaymentTransaction {
+  const database = getDb();
+
+  const result = database
+    .prepare(`
+      INSERT INTO payment_transactions (tg_user_id, stripe_session_id, amount, currency, status)
+      VALUES (?, ?, ?, ?, 'pending')
+    `)
+    .run(tgUserId, stripeSessionId, amount, currency);
+
+  return {
+    id: result.lastInsertRowid as number,
+    tgUserId,
+    stripeSessionId,
+    amount,
+    currency,
+    status: 'pending',
+    createdAt: new Date(),
+  };
+}
+
+export function updatePaymentTransaction(
+  stripeSessionId: string,
+  status: PaymentStatus,
+  options?: {
+    stripePaymentIntentId?: string;
+    paymentMethod?: string;
+  }
+): boolean {
+  const database = getDb();
+
+  const completedAt = status === 'completed' ? 'CURRENT_TIMESTAMP' : 'NULL';
+
+  const result = database
+    .prepare(`
+      UPDATE payment_transactions
+      SET status = ?,
+          stripe_payment_intent_id = COALESCE(?, stripe_payment_intent_id),
+          payment_method = COALESCE(?, payment_method),
+          completed_at = ${completedAt === 'CURRENT_TIMESTAMP' ? 'CURRENT_TIMESTAMP' : 'completed_at'}
+      WHERE stripe_session_id = ?
+    `)
+    .run(status, options?.stripePaymentIntentId ?? null, options?.paymentMethod ?? null, stripeSessionId);
+
+  return result.changes > 0;
+}
+
+export function getPaymentTransaction(stripeSessionId: string): PaymentTransaction | null {
+  const database = getDb();
+  const row = database
+    .prepare('SELECT * FROM payment_transactions WHERE stripe_session_id = ?')
+    .get(stripeSessionId) as {
+      id: number;
+      tg_user_id: number;
+      stripe_session_id: string;
+      stripe_payment_intent_id: string | null;
+      payment_method: string | null;
+      amount: number;
+      currency: string;
+      status: string;
+      created_at: string;
+      completed_at: string | null;
+    } | undefined;
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    tgUserId: row.tg_user_id,
+    stripeSessionId: row.stripe_session_id,
+    stripePaymentIntentId: row.stripe_payment_intent_id ?? undefined,
+    paymentMethod: row.payment_method ?? undefined,
+    amount: row.amount,
+    currency: row.currency,
+    status: row.status as PaymentStatus,
+    createdAt: new Date(row.created_at),
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+  };
+}
+
+export function getRecentPayments(limit = 20): PaymentTransaction[] {
+  const database = getDb();
+  const rows = database
+    .prepare(`
+      SELECT pt.*, au.username
+      FROM payment_transactions pt
+      LEFT JOIN authorized_users au ON pt.tg_user_id = au.tg_user_id
+      ORDER BY pt.created_at DESC
+      LIMIT ?
+    `)
+    .all(limit) as Array<{
+      id: number;
+      tg_user_id: number;
+      stripe_session_id: string;
+      stripe_payment_intent_id: string | null;
+      payment_method: string | null;
+      amount: number;
+      currency: string;
+      status: string;
+      created_at: string;
+      completed_at: string | null;
+      username: string | null;
+    }>;
+
+  return rows.map(row => ({
+    id: row.id,
+    tgUserId: row.tg_user_id,
+    stripeSessionId: row.stripe_session_id,
+    stripePaymentIntentId: row.stripe_payment_intent_id ?? undefined,
+    paymentMethod: row.payment_method ?? undefined,
+    amount: row.amount,
+    currency: row.currency,
+    status: row.status as PaymentStatus,
+    createdAt: new Date(row.created_at),
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+    username: row.username ?? undefined,
+  }));
+}
+
+export function getPaymentStats(): {
+  total: number;
+  completed: number;
+  totalRevenue: number;
+  byMethod: Record<string, number>;
+} {
+  const database = getDb();
+
+  const statsRow = database
+    .prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END), 0) as total_revenue
+      FROM payment_transactions
+    `)
+    .get() as { total: number; completed: number; total_revenue: number };
+
+  const byMethodRows = database
+    .prepare(`
+      SELECT payment_method, COUNT(*) as count
+      FROM payment_transactions
+      WHERE status = 'completed' AND payment_method IS NOT NULL
+      GROUP BY payment_method
+    `)
+    .all() as Array<{ payment_method: string; count: number }>;
+
+  const byMethod: Record<string, number> = {};
+  byMethodRows.forEach(row => {
+    byMethod[row.payment_method] = row.count;
+  });
+
+  return {
+    total: statsRow.total,
+    completed: statsRow.completed,
+    totalRevenue: statsRow.total_revenue,
+    byMethod,
+  };
 }

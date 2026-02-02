@@ -31,18 +31,11 @@ export async function handlePrivacy(ctx: Context): Promise<void> {
 }
 
 export async function handleStatus(ctx: Context): Promise<void> {
-  // Get provider status
   const priceProviderStatus = await getProviderStatus();
   const securityProviderStatus = await getSecurityProviderStatus();
-
-  // Get counts
   const alerts = getAllActiveAlerts();
   const watchlist = getAllWatchlistItems();
-
-  // Get scheduler status
   const schedulerStatus = getSchedulerStatus();
-
-  // Calculate uptime
   const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000);
 
   const providers = [
@@ -55,7 +48,7 @@ export async function handleStatus(ctx: Context): Promise<void> {
     providers,
     lastAlertRun: schedulerStatus.lastAlertRun,
     lastWatchlistRun: schedulerStatus.lastWatchlistRun,
-    cacheSize: 0, // Would need to track this
+    cacheSize: 0,
     alertCount: alerts.length,
     watchlistCount: watchlist.length,
   });

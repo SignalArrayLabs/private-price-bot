@@ -39,7 +39,9 @@ export async function handlePrice(ctx: Context): Promise<void> {
   await ctx.replyWithChatAction('typing');
 
   try {
+    console.log('[DEBUG] Fetching price for:', parsed.symbolOrAddress, 'chain:', parsed.chain);
     const priceData = await getPrice(parsed.symbolOrAddress, parsed.chain);
+    console.log('[DEBUG] Price result:', priceData ? 'found' : 'null');
 
     if (!priceData) {
       await ctx.reply(formatNotFound(parsed.symbolOrAddress), { parse_mode: 'HTML' });

@@ -316,3 +316,106 @@ export function normalizeChain(chain: string): SupportedChain | null {
 
   return aliases[normalized] ?? null;
 }
+
+// ============ New Feature Parsers ============
+
+export interface GasArgs {
+  chain: SupportedChain;
+}
+
+export function parseGasArgs(args: string[]): GasArgs {
+  if (args.length === 0) {
+    return { chain: 'ethereum' };
+  }
+
+  const chainArg = args[0].toLowerCase();
+  const validChain = chainSchema.safeParse(chainArg);
+
+  if (validChain.success) {
+    return { chain: validChain.data };
+  }
+
+  // Try aliases
+  const normalized = normalizeChain(chainArg);
+  if (normalized) {
+    return { chain: normalized };
+  }
+
+  return { chain: 'ethereum' };
+}
+
+export interface ConvertArgs {
+  amount: number;
+  fromSymbol: string;
+  toSymbol: string;
+}
+
+export function parseConvertArgs(args: string[]): ConvertArgs | null {
+  // /convert <amount> <from> <to>
+  if (args.length < 3) {
+    return null;
+  }
+
+  const amountStr = args[0].replace(/[$,]/g, '');
+  const amount = parseFloat(amountStr);
+
+  if (isNaN(amount) || amount <= 0) {
+    return null;
+  }
+
+  const fromSymbol = args[1];
+  const toSymbol = args[2];
+
+  const validFrom = symbolOrAddressSchema.safeParse(fromSymbol);
+  const validTo = symbolOrAddressSchema.safeParse(toSymbol);
+
+  if (!validFrom.success || !validTo.success) {
+    return null;
+  }
+
+  return {
+    amount,
+    fromSymbol: validFrom.data.toUpperCase(),
+    toSymbol: validTo.data.toUpperCase(),
+  };
+}
+
+export interface ATHArgs {
+  symbol: string;
+}
+
+export function parseATHArgs(args: string[]): ATHArgs | null {
+  if (args.length === 0) {
+    return null;
+  }
+
+  const symbol = args[0];
+  const validSymbol = symbolOrAddressSchema.safeParse(symbol);
+
+  if (!validSymbol.success) {
+    return null;
+  }
+
+  return { symbol: validSymbol.data };
+}
+
+export interface MoversArgs {
+  limit: number;
+}
+
+export function parseMoversArgs(args: string[]): MoversArgs {
+  const defaultLimit = 5;
+  const maxLimit = 10;
+
+  if (args.length === 0) {
+    return { limit: defaultLimit };
+  }
+
+  const limit = parseInt(args[0], 10);
+
+  if (isNaN(limit) || limit <= 0) {
+    return { limit: defaultLimit };
+  }
+
+  return { limit: Math.min(limit, maxLimit) };
+}

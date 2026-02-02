@@ -8,7 +8,7 @@ const configSchema = z.object({
   telegramBotToken: z.string().min(1, 'TELEGRAM_BOT_TOKEN is required'),
 
   // Price Provider
-  priceProvider: z.enum(['coingecko', 'coincap', 'binance', 'cmc']).default('coingecko'),
+  priceProvider: z.enum(['coingecko', 'dexscreener', 'coincap', 'binance', 'cmc']).default('dexscreener'),
   coingeckoBaseUrl: z.string().url().default('https://api.coingecko.com/api/v3'),
   coingeckoApiKey: z.string().optional(),
   cmcApiKey: z.string().optional(),
@@ -39,6 +39,17 @@ const configSchema = z.object({
   // AI Helper
   aiHelperEnabled: z.coerce.boolean().default(false),
   aiHelperApiKey: z.string().optional(),
+
+  // Access Control
+  adminTelegramId: z.coerce.number().int().optional(),
+  subscriptionPrice: z.coerce.number().positive().default(29.99),
+  accessControlEnabled: z.coerce.boolean().default(true),
+
+  // Stripe Configuration (for future payment integration)
+  stripeSecretKey: z.string().optional(),
+  stripeWebhookSecret: z.string().optional(),
+  stripePriceId: z.string().optional(),
+  botUrl: z.string().url().optional(),
 });
 
 function loadConfig() {
@@ -61,6 +72,15 @@ function loadConfig() {
     cacheTtlSecurity: process.env.CACHE_TTL_SECURITY,
     aiHelperEnabled: process.env.AI_HELPER_ENABLED,
     aiHelperApiKey: process.env.AI_HELPER_API_KEY,
+    // Access Control
+    adminTelegramId: process.env.ADMIN_TELEGRAM_ID,
+    subscriptionPrice: process.env.SUBSCRIPTION_PRICE,
+    accessControlEnabled: process.env.ACCESS_CONTROL_ENABLED,
+    // Stripe
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    stripePriceId: process.env.STRIPE_PRICE_ID,
+    botUrl: process.env.BOT_URL,
   };
 
   const result = configSchema.safeParse(rawConfig);

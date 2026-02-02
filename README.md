@@ -109,6 +109,18 @@ npm start
 | `/price <symbol\|address> [chain]` | Full price card | `/price 0x... ethereum` |
 | `/chart <symbol>` | Get chart links | `/chart ETH` |
 | `/default` | Show default token price | `/default` |
+| `/convert <amt> <from> <to>` | Currency converter | `/convert 1 BTC ETH` |
+| `/ath <symbol>` | All-time high info | `/ath BTC` |
+
+### 📊 Market Data
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/gas [chain]` | Gas prices | `/gas ethereum` |
+| `/trending` | Trending tokens | `/trending` |
+| `/fgi` | Fear & Greed Index | `/fgi` |
+| `/gainers [n]` | Top gainers (24h) | `/gainers 5` |
+| `/losers [n]` | Top losers (24h) | `/losers 5` |
 
 ### ⚙️ Configuration
 
@@ -285,6 +297,16 @@ Use this checklist when testing in a real Telegram group:
 - [ ] `/scan 0x...` → Shows security card
 - [ ] `/help` → Shows commands
 - [ ] `/status` → Shows bot status
+
+### New Features
+- [ ] `/gas` → Returns gas prices for Ethereum
+- [ ] `/gas bsc` → Returns gas prices for BSC
+- [ ] `/trending` → Shows trending tokens
+- [ ] `/fgi` → Shows Fear & Greed Index
+- [ ] `/gainers` → Shows top gainers
+- [ ] `/losers` → Shows top losers
+- [ ] `/convert 1 BTC ETH` → Converts currencies
+- [ ] `/ath BTC` → Shows all-time high info
 
 ---
 

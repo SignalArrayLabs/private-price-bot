@@ -1,0 +1,43 @@
+
+TELEGRAM_BOT_TOKEN=8028771585:AAFXhXre7_0u1YohTcMJPrxpbjMOU7Gormk
+
+# Telegram Bot Configuration (REQUIRED)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# Price Provider Configuration
+# Options: coingecko (default), coincap, binance, cmc
+PRICE_PROVIDER=coingecko
+
+# CoinGecko Configuration (optional, uses public API by default)
+COINGECKO_BASE_URL=https://api.coingecko.com/api/v3
+# COINGECKO_API_KEY=your_pro_api_key
+
+# CoinMarketCap Configuration (optional, for paid tier)
+# CMC_API_KEY=your_cmc_api_key
+
+# Blockchain Explorer API Keys (optional, limited functionality without)
+# ETHERSCAN_API_KEY=your_etherscan_key
+# BSCSCAN_API_KEY=your_bscscan_key
+# POLYGONSCAN_API_KEY=your_polygonscan_key
+
+# Database Configuration
+SQLITE_PATH=./data/bot.db
+
+# Logging
+LOG_LEVEL=info
+
+# Scheduler Configuration (cron expressions)
+ALERT_JOB_CRON=*/1 * * * *
+WATCH_JOB_CRON=*/5 * * * *
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=30
+RATE_LIMIT_WINDOW_MS=60000
+
+# Cache TTL (seconds)
+CACHE_TTL_PRICE=30
+CACHE_TTL_SECURITY=300
+
+# AI Helper Mode (disabled by default)
+AI_HELPER_ENABLED=false
+# AI_HELPER_API_KEY=your_openai_or_anthropic_key

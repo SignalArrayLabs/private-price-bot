@@ -5,7 +5,7 @@ import { CoinGeckoProvider } from './coingecko.js';
 import { CoinCapProvider } from './coincap.js';
 import { BinanceProvider } from './binance.js';
 import { DexScreenerProvider } from './dexscreener.js';
-import type { PriceData, TokenInfo, PriceProvider } from '../../types/index.js';
+import type { PriceData, TokenInfo, PriceProvider, ATHData } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
 
 // Provider registry
@@ -75,20 +75,28 @@ export async function getPrice(
 
   // Try providers in order
   const providerOrder = getProviderOrder();
+  console.log('[DEBUG] Provider order:', providerOrder, 'for symbol:', symbolOrAddress);
 
   for (const providerName of providerOrder) {
     const provider = getProvider(providerName);
-    if (!provider) continue;
+    if (!provider) {
+      console.log('[DEBUG] Provider not found:', providerName);
+      continue;
+    }
 
     // Skip if provider is unhealthy
+    console.log('[DEBUG] Checking health of:', providerName);
     const healthy = await provider.isHealthy();
+    console.log('[DEBUG] Provider', providerName, 'healthy:', healthy);
     if (!healthy) {
       logger.debug({ provider: providerName }, 'Skipping unhealthy provider');
       continue;
     }
 
     try {
+      console.log('[DEBUG] Calling getPrice on:', providerName);
       const data = await provider.getPrice(symbolOrAddress, chain);
+      console.log('[DEBUG] Result from', providerName, ':', data ? 'found' : 'null');
       if (data) {
         // Cache the result
         const ttl = config.cacheTtlPrice;
@@ -171,6 +179,29 @@ export async function getProviderStatus(): Promise<{
 // Clear caches
 export function clearPriceCache(): void {
   memoryCache.clear();
+}
+
+// Get ATH data (CoinGecko specific)
+export async function getATHData(symbolOrAddress: string): Promise<ATHData | null> {
+  if (providers.size === 0) {
+    initProviders();
+  }
+
+  // ATH data is only available from CoinGecko
+  const coingecko = providers.get('coingecko') as CoinGeckoProvider | undefined;
+  if (!coingecko) {
+    return null;
+  }
+
+  try {
+    return await coingecko.getATHData(symbolOrAddress);
+  } catch (error) {
+    logger.warn({
+      symbol: symbolOrAddress,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, 'Failed to get ATH data');
+    return null;
+  }
 }
 
 // Export providers for direct access if needed

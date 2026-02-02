@@ -6,6 +6,7 @@ import { logger } from '../utils/logger.js';
 import { privacyMiddleware } from './middleware/privacy.js';
 import { rateLimitMiddleware } from './middleware/rateLimit.js';
 import { mentionMiddleware, getMentionContext } from './middleware/mention.js';
+import { accessMiddleware } from './middleware/access.js';
 
 // Command handlers
 import { handleStart, handleHelp, handlePrivacy, handleStatus } from './commands/general.js';
@@ -14,6 +15,17 @@ import { handleSetDefault, handleWatch } from './commands/config.js';
 import { handleAlert } from './commands/alerts.js';
 import { handleCall, handleCalls, handleLeaderboard } from './commands/calls.js';
 import { handleScan, handleDeployer, handleWebsiteCheck, handleTwitterCheck } from './commands/security.js';
+
+// New feature command handlers
+import { handleConvert } from './commands/convert.js';
+import { handleATH } from './commands/ath.js';
+import { handleFGI } from './commands/sentiment.js';
+import { handleTrending } from './commands/trending.js';
+import { handleGas } from './commands/gas.js';
+import { handleGainers, handleLosers } from './commands/movers.js';
+
+// Admin command handlers
+import { handleApprove, handleRevoke, handleListUsers, handleCheckUser, handlePayments } from './commands/admin.js';
 
 // Callback handler
 import { handleCallback } from './handlers/callbacks.js';
@@ -25,6 +37,7 @@ export function createBot(): Bot {
   bot.use(privacyMiddleware);
   bot.use(rateLimitMiddleware);
   bot.use(mentionMiddleware);
+  bot.use(accessMiddleware);
 
   // General commands
   bot.command('start', handleStart);
@@ -56,6 +69,22 @@ export function createBot(): Bot {
   bot.command('websitecheck', handleWebsiteCheck);
   bot.command('twittercheck', handleTwitterCheck);
 
+  // New feature commands
+  bot.command('convert', handleConvert);
+  bot.command('ath', handleATH);
+  bot.command('fgi', handleFGI);
+  bot.command('trending', handleTrending);
+  bot.command('gas', handleGas);
+  bot.command('gainers', handleGainers);
+  bot.command('losers', handleLosers);
+
+  // Admin commands (access controlled by middleware)
+  bot.command('approve', handleApprove);
+  bot.command('revoke', handleRevoke);
+  bot.command('users', handleListUsers);
+  bot.command('checkuser', handleCheckUser);
+  bot.command('payments', handlePayments);
+
   // Handle callback queries (inline keyboard buttons)
   bot.on('callback_query:data', handleCallback);
 
@@ -82,7 +111,21 @@ export function createBot(): Bot {
       case 'privacy':
         await handlePrivacy(ctx);
         break;
-      // Add more mention-triggered commands as needed
+      case 'gas':
+        await handleGas(ctx);
+        break;
+      case 'trending':
+        await handleTrending(ctx);
+        break;
+      case 'fgi':
+        await handleFGI(ctx);
+        break;
+      case 'gainers':
+        await handleGainers(ctx);
+        break;
+      case 'losers':
+        await handleLosers(ctx);
+        break;
     }
   });
 

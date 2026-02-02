@@ -1,5 +1,5 @@
 import { BasePriceProvider } from './base.js';
-import type { PriceData, TokenInfo } from '../../types/index.js';
+import type { PriceData, TokenInfo, ATHData } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
 import { config, CHAIN_CONFIG } from '../../config/index.js';
 import { logger } from '../../utils/logger.js';
@@ -26,6 +26,9 @@ interface CoinGeckoCoinInfo {
     total_volume?: { usd?: number };
     high_24h?: { usd?: number };
     low_24h?: { usd?: number };
+    ath?: { usd?: number };
+    ath_change_percentage?: { usd?: number };
+    ath_date?: { usd?: string };
   };
   last_updated?: string;
 }
@@ -67,6 +70,7 @@ export class CoinGeckoProvider extends BasePriceProvider {
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Accept': 'application/json',
+      'User-Agent': 'PrivatePriceBot/1.0',
     };
     if (this.apiKey) {
       headers['x-cg-pro-api-key'] = this.apiKey;
@@ -254,6 +258,52 @@ export class CoinGeckoProvider extends BasePriceProvider {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  async getATHData(symbolOrAddress: string): Promise<ATHData | null> {
+    try {
+      const symbol = this.normalizeSymbol(symbolOrAddress);
+
+      // Resolve coin ID
+      let coinId: string | null = null;
+
+      if (COMMON_SYMBOLS[symbol]) {
+        coinId = COMMON_SYMBOLS[symbol];
+      } else if (discoveredTokens.has(symbol)) {
+        coinId = discoveredTokens.get(symbol)!;
+      } else {
+        const searchResult = await this.searchAndGetBestMatch(symbol);
+        if (searchResult) {
+          coinId = searchResult.id;
+          discoveredTokens.set(symbol, coinId);
+        }
+      }
+
+      if (!coinId) {
+        return null;
+      }
+
+      const url = `${this.baseUrl}/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`;
+      const data = await this.fetchWithTimeout<CoinGeckoCoinInfo>(url, {
+        headers: this.getHeaders(),
+      });
+
+      if (!data.market_data?.current_price?.usd || !data.market_data?.ath?.usd) {
+        return null;
+      }
+
+      return {
+        symbol: data.symbol.toUpperCase(),
+        name: data.name,
+        currentPrice: data.market_data.current_price.usd,
+        ath: data.market_data.ath.usd,
+        athChangePercent: data.market_data.ath_change_percentage?.usd ?? 0,
+        athDate: data.market_data.ath_date?.usd ? new Date(data.market_data.ath_date.usd) : new Date(),
+      };
+    } catch (error) {
+      logger.debug({ symbol: symbolOrAddress, error }, 'Failed to get ATH data');
+      return null;
     }
   }
 }

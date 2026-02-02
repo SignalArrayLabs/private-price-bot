@@ -715,6 +715,199 @@ Created: 2023-04-15
 [📊 Price] [👤 Deployer History]
 ```
 
+#### /gas - Gas Prices
+
+**Input:**
+```
+/gas [chain]
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| chain | string | No | ethereum | ethereum, bsc, polygon |
+
+**Output:**
+```
+⛽ Gas Prices - Ethereum
+
+🟢 Low: 15 GWEI
+🟡 Average: 20 GWEI
+🔴 Fast: 30 GWEI
+
+📊 Base Fee: 12.50 GWEI
+🧱 Block: 19,234,567
+
+🕐 Updated: 5 seconds ago
+```
+
+#### /trending - Trending Tokens
+
+**Input:**
+```
+/trending
+```
+
+**Output:**
+```
+🔥 Trending on CoinGecko
+
+1. PEPE - Pepe
+   📊 Rank: #89 | 📈 +12.50%
+
+2. WIF - dogwifhat
+   📊 Rank: #45 | 📉 -3.20%
+
+... (top 7)
+
+🕐 Updated: just now
+```
+
+#### /convert - Currency Converter
+
+**Input:**
+```
+/convert <amount> <from> <to>
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| amount | number | Yes | Amount to convert |
+| from | string | Yes | Source currency symbol |
+| to | string | Yes | Target currency symbol |
+
+**Output:**
+```
+💱 Currency Conversion
+
+💰 1 BTC = 16.75 ETH
+
+📊 Rates:
+• 1 BTC = $67,000.00
+• 1 ETH = $4,000.00
+• 1 BTC = 16.75 ETH
+
+🕐 Updated: just now
+```
+
+#### /ath - All-Time High
+
+**Input:**
+```
+/ath <symbol>
+```
+
+**Output:**
+```
+🏆 All-Time High - Bitcoin
+
+💰 Current: $67,234.56
+🥇 ATH: $69,000.00
+📅 ATH Date: November 10, 2021
+
+🔥 From ATH: -2.56%
+```
+
+#### /fgi - Fear & Greed Index
+
+**Input:**
+```
+/fgi
+```
+
+**Output:**
+```
+🎯 Crypto Fear & Greed Index
+
+Current: 72 - Greed 🤑
+
+😱 Extreme Fear   [0-25]
+😰 Fear           [26-46]
+😐 Neutral        [47-53]
+🤑 Greed          [54-74]  ◄
+🚀 Extreme Greed  [75-100]
+
+📊 Yesterday: 68 - Greed
+📈 Change: +4
+
+🕐 January 27, 2026
+Source: alternative.me
+```
+
+#### /gainers - Top Gainers
+
+**Input:**
+```
+/gainers [limit]
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| limit | number | No | 5 | Number of tokens (max 10) |
+
+**Output:**
+```
+🚀 Top Gainers (24h)
+
+1. PEPE +45.20%
+   $0.00001234 | MC: $5.2B
+
+2. WIF +32.10%
+   $2.45 | MC: $2.4B
+
+... (5 total)
+
+🕐 Updated: just now
+```
+
+#### /losers - Top Losers
+
+**Input:**
+```
+/losers [limit]
+```
+
+**Output:**
+```
+📉 Top Losers (24h)
+
+1. TOKEN1 -15.50%
+   $1.50 | MC: $100M
+
+... (5 total)
+
+🕐 Updated: just now
+```
+
+---
+
+## Future Additions
+
+Potential features for future development, maintaining the privacy-first design:
+
+### Portfolio & Tracking
+- `/portfolio add/remove/view` - Track personal holdings with P/L
+- `/wallet <address>` - Monitor wallet balances and transactions (opt-in)
+- `/unlocks <symbol>` - Upcoming token unlock schedules
+
+### DeFi
+- `/yields <protocol>` - Current APY/APR for lending/staking
+- `/stake <symbol>` - Staking rewards and validators info
+- `/trades <pair>` - Recent large trades on DEXes
+
+### Market Intelligence
+- `/news [symbol]` - Latest crypto news headlines
+- `/calendar` - Upcoming events, launches, upgrades
+- `/dominance` - BTC/ETH market dominance chart
+- `/compare <token1> <token2>` - Side-by-side token comparison
+
+### NFTs
+- `/nft <collection>` - Floor prices for NFT collections
+- `/nfttrending` - Trending NFT collections
+
+### Social & Alerts
+- `/whales` - Large transaction notifications
+- `/sentiment <symbol>` - Twitter/social media sentiment analysis
+
 ---
 
 ## API Quotas & Rate Limits
