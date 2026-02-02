@@ -96,9 +96,8 @@ export class DexScreenerProvider extends BasePriceProvider {
         return null;
       }
 
-      // Get the pair with highest liquidity
-      const bestPair = this.getBestPair(pairs);
-      return this.pairToPriceData(bestPair);
+      // Aggregate data across all pairs for this token
+      return this.aggregatePairData(pairs);
     } catch {
       return null;
     }
@@ -113,7 +112,7 @@ export class DexScreenerProvider extends BasePriceProvider {
         return null;
       }
 
-      // Find exact symbol match first, prioritize by liquidity/market cap
+      // Find exact symbol match first
       const normalizedQuery = query.toUpperCase();
 
       // Filter for exact symbol matches
@@ -122,41 +121,79 @@ export class DexScreenerProvider extends BasePriceProvider {
       );
 
       const pairs = exactMatches.length > 0 ? exactMatches : data.pairs;
-      const bestPair = this.getBestPair(pairs);
 
-      return this.pairToPriceData(bestPair);
+      // Group by token to handle symbol collisions (e.g., PENGU vs PENGUIN)
+      const grouped = this.groupPairsByToken(pairs);
+
+      if (grouped.size === 0) {
+        return null;
+      }
+
+      // If multiple tokens match, pick the one with highest total liquidity
+      let bestTokenPairs: DexScreenerPair[] = [];
+      let maxLiquidity = 0;
+
+      for (const tokenPairs of grouped.values()) {
+        const totalLiquidity = tokenPairs.reduce((sum, p) => sum + (p.liquidity?.usd ?? 0), 0);
+        if (totalLiquidity > maxLiquidity) {
+          maxLiquidity = totalLiquidity;
+          bestTokenPairs = tokenPairs;
+        }
+      }
+
+      // Aggregate data across all pairs for the selected token
+      return this.aggregatePairData(bestTokenPairs);
     } catch {
       return null;
     }
   }
 
-  private getBestPair(pairs: DexScreenerPair[]): DexScreenerPair {
-    // Sort by liquidity (higher is better), then by volume
-    return pairs.sort((a, b) => {
-      const liquidityA = a.liquidity?.usd ?? 0;
-      const liquidityB = b.liquidity?.usd ?? 0;
-      if (liquidityA !== liquidityB) {
-        return liquidityB - liquidityA;
+  private groupPairsByToken(pairs: DexScreenerPair[]): Map<string, DexScreenerPair[]> {
+    const grouped = new Map<string, DexScreenerPair[]>();
+
+    for (const pair of pairs) {
+      // Group by token address (or symbol if address not available)
+      const key = pair.baseToken.address || pair.baseToken.symbol.toUpperCase();
+
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
       }
-      return (b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0);
-    })[0];
+      grouped.get(key)!.push(pair);
+    }
+
+    return grouped;
   }
 
-  private pairToPriceData(pair: DexScreenerPair): PriceData {
-    const price = parseFloat(pair.priceUsd) || 0;
+  private aggregatePairData(pairs: DexScreenerPair[]): PriceData {
+    // Limit to top 20 pairs by liquidity for performance
+    const topPairs = pairs
+      .sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))
+      .slice(0, 20);
+
+    // Get reference pair (highest liquidity) for price and metadata
+    const refPair = topPairs[0];
+    const price = parseFloat(refPair.priceUsd) || 0;
+
+    // Aggregate volume across all pairs
+    const totalVolume = topPairs.reduce((sum, pair) => sum + (pair.volume?.h24 ?? 0), 0);
+
+    // Use highest market cap or FDV available
+    const marketCap = Math.max(
+      ...topPairs.map(p => p.marketCap ?? p.fdv ?? 0)
+    );
 
     return {
-      symbol: pair.baseToken.symbol.toUpperCase(),
-      name: pair.baseToken.name,
+      symbol: refPair.baseToken.symbol.toUpperCase(),
+      name: refPair.baseToken.name,
       price,
-      priceChange24h: price * (pair.priceChange?.h24 ?? 0) / 100,
-      priceChangePercent24h: pair.priceChange?.h24 ?? 0,
-      marketCap: pair.marketCap ?? pair.fdv ?? 0,
-      volume24h: pair.volume?.h24 ?? 0,
+      priceChange24h: price * (refPair.priceChange?.h24 ?? 0) / 100,
+      priceChangePercent24h: refPair.priceChange?.h24 ?? 0,
+      marketCap,
+      volume24h: totalVolume, // FIXED: Aggregated across all pairs
       high24h: 0, // DexScreener doesn't provide this
       low24h: 0,  // DexScreener doesn't provide this
       lastUpdated: new Date(),
-      address: pair.baseToken.address,
+      address: refPair.baseToken.address,
     };
   }
 

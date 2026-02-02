@@ -9,6 +9,7 @@ import { getGasPrice } from '../../providers/gas/etherscan.js';
 import { getTrendingTokens } from '../../providers/trending/coingecko.js';
 import { getFearGreedIndex } from '../../providers/sentiment/alternativeme.js';
 import { getTopGainers, getTopLosers } from '../../providers/movers/coingecko.js';
+import { getOnChainGainers, getOnChainLosers } from '../../providers/movers/dexscreener.js';
 import type { ConvertResult } from '../../types/index.js';
 
 export async function handleCallback(ctx: Context): Promise<void> {
@@ -298,11 +299,22 @@ async function handleFGICallback(ctx: Context): Promise<void> {
 
 async function handleGainersCallback(ctx: Context, params: string[]): Promise<void> {
   const limit = params[0] ? parseInt(params[0], 10) : 5;
+  const category = (params[1] as 'majors' | 'onchain') || 'majors';
 
   await ctx.answerCallbackQuery({ text: 'Refreshing gainers...' });
 
   try {
-    const tokens = await getTopGainers(limit);
+    // Route to appropriate provider
+    let tokens;
+    let source;
+
+    if (category === 'onchain') {
+      tokens = await getOnChainGainers(limit);
+      source = 'DexScreener (On-chain)';
+    } else {
+      tokens = await getTopGainers(limit);
+      source = 'CoinGecko (Majors)';
+    }
 
     if (tokens.length === 0) {
       await ctx.editMessageText(formatError('Failed to fetch gainers.'), { parse_mode: 'HTML' });
@@ -310,8 +322,16 @@ async function handleGainersCallback(ctx: Context, params: string[]): Promise<vo
     }
 
     const keyboard = new InlineKeyboard()
-      .text('🔄 Refresh', `gainers:${limit}`)
-      .text('📉 Losers', `losers:${limit}`);
+      .text('🔄 Refresh', `gainers:${limit}:${category}`)
+      .text('📉 Losers', `losers:${limit}:${category}`)
+      .row();
+
+    // Add category toggle
+    if (category === 'majors') {
+      keyboard.text('⛓️ On-chain', `gainers:${limit}:onchain`);
+    } else {
+      keyboard.text('🏦 Majors', `gainers:${limit}:majors`);
+    }
 
     if (tokens.length >= 3) {
       keyboard.row();
@@ -320,7 +340,7 @@ async function handleGainersCallback(ctx: Context, params: string[]): Promise<vo
       });
     }
 
-    await ctx.editMessageText(formatGainersCard(tokens), {
+    await ctx.editMessageText(formatGainersCard(tokens, source), {
       parse_mode: 'HTML',
       reply_markup: keyboard,
     });
@@ -331,11 +351,22 @@ async function handleGainersCallback(ctx: Context, params: string[]): Promise<vo
 
 async function handleLosersCallback(ctx: Context, params: string[]): Promise<void> {
   const limit = params[0] ? parseInt(params[0], 10) : 5;
+  const category = (params[1] as 'majors' | 'onchain') || 'majors';
 
   await ctx.answerCallbackQuery({ text: 'Refreshing losers...' });
 
   try {
-    const tokens = await getTopLosers(limit);
+    // Route to appropriate provider
+    let tokens;
+    let source;
+
+    if (category === 'onchain') {
+      tokens = await getOnChainLosers(limit);
+      source = 'DexScreener (On-chain)';
+    } else {
+      tokens = await getTopLosers(limit);
+      source = 'CoinGecko (Majors)';
+    }
 
     if (tokens.length === 0) {
       await ctx.editMessageText(formatError('Failed to fetch losers.'), { parse_mode: 'HTML' });
@@ -343,8 +374,16 @@ async function handleLosersCallback(ctx: Context, params: string[]): Promise<voi
     }
 
     const keyboard = new InlineKeyboard()
-      .text('🔄 Refresh', `losers:${limit}`)
-      .text('🚀 Gainers', `gainers:${limit}`);
+      .text('🔄 Refresh', `losers:${limit}:${category}`)
+      .text('🚀 Gainers', `gainers:${limit}:${category}`)
+      .row();
+
+    // Add category toggle
+    if (category === 'majors') {
+      keyboard.text('⛓️ On-chain', `losers:${limit}:onchain`);
+    } else {
+      keyboard.text('🏦 Majors', `losers:${limit}:majors`);
+    }
 
     if (tokens.length >= 3) {
       keyboard.row();
@@ -353,7 +392,7 @@ async function handleLosersCallback(ctx: Context, params: string[]): Promise<voi
       });
     }
 
-    await ctx.editMessageText(formatLosersCard(tokens), {
+    await ctx.editMessageText(formatLosersCard(tokens, source), {
       parse_mode: 'HTML',
       reply_markup: keyboard,
     });

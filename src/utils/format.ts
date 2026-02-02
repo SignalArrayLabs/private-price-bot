@@ -499,6 +499,17 @@ export function formatRateLimited(waitSeconds: number): string {
   return `⏳ <b>Rate Limited</b>\n\nPlease wait ${waitSeconds} seconds before trying again.`;
 }
 
+export function formatPartialScan(address: string, chain: string): string {
+  return `⚠️ <b>Partial Scan - Data Unavailable</b>\n\n` +
+    `<b>Address:</b> <code>${escapeHtml(address)}</code>\n` +
+    `<b>Chain:</b> ${escapeHtml(chain)}\n\n` +
+    `Unable to fetch full security data. The contract may be:\n` +
+    `• Not verified\n` +
+    `• Recently deployed\n` +
+    `• Not indexed yet\n\n` +
+    `⚠️ <b>Proceed with caution.</b>`;
+}
+
 // ============ New Feature Cards ============
 
 // Gas prices card
@@ -622,7 +633,7 @@ export function formatFGICard(data: FearGreedData): string {
 }
 
 // Top gainers card
-export function formatGainersCard(tokens: MoverToken[]): string {
+export function formatGainersCard(tokens: MoverToken[], source?: string): string {
   if (tokens.length === 0) {
     return '<b>🚀 Top Gainers</b>\n\nNo data available.';
   }
@@ -636,11 +647,15 @@ export function formatGainersCard(tokens: MoverToken[]): string {
 
   message += `\n🕐 <i>Updated: just now</i>`;
 
+  if (source) {
+    message += `\n📊 <i>Source: ${escapeHtml(source)}</i>`;
+  }
+
   return message;
 }
 
 // Top losers card
-export function formatLosersCard(tokens: MoverToken[]): string {
+export function formatLosersCard(tokens: MoverToken[], source?: string): string {
   if (tokens.length === 0) {
     return '<b>📉 Top Losers</b>\n\nNo data available.';
   }
@@ -653,6 +668,10 @@ export function formatLosersCard(tokens: MoverToken[]): string {
   });
 
   message += `\n🕐 <i>Updated: just now</i>`;
+
+  if (source) {
+    message += `\n📊 <i>Source: ${escapeHtml(source)}</i>`;
+  }
 
   return message;
 }

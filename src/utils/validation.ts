@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { SUPPORTED_CHAINS, type SupportedChain } from '../config/index.js';
 
 // Address validation
-export const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid address format');
+export const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid EVM address format');
+
+// Solana address validation (base58, 32-44 characters)
+export const solanaAddressSchema = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid Solana address format');
 
 // Symbol validation (1-20 alphanumeric characters)
 export const symbolSchema = z.string().min(1).max(20).regex(/^[a-zA-Z0-9]+$/, 'Invalid symbol format');
@@ -263,6 +266,7 @@ export function parseSetDefaultArgs(args: string[]): SetDefaultArgs | null {
 export interface ScanArgs {
   address: string;
   chain: SupportedChain;
+  chainType: 'evm' | 'solana';
 }
 
 export function parseScanArgs(args: string[]): ScanArgs | null {
@@ -271,30 +275,69 @@ export function parseScanArgs(args: string[]): ScanArgs | null {
   }
 
   const address = args[0];
-  const validAddress = addressSchema.safeParse(address);
 
-  if (!validAddress.success) {
-    return null;
+  // Detect chain type from address format
+  const chainType = detectChainFromAddress(address);
+
+  if (chainType === 'unknown') {
+    return null; // Invalid address format
   }
 
-  let chain: SupportedChain = 'ethereum'; // Default
-  if (args.length > 1) {
-    const chainArg = args[1].toLowerCase();
-    const validChain = chainSchema.safeParse(chainArg);
-    if (validChain.success) {
-      chain = validChain.data;
+  // Validate based on detected type
+  if (chainType === 'evm') {
+    const validAddress = addressSchema.safeParse(address);
+    if (!validAddress.success) {
+      return null;
+    }
+  } else if (chainType === 'solana') {
+    const validAddress = solanaAddressSchema.safeParse(address);
+    if (!validAddress.success) {
+      return null;
+    }
+  }
+
+  // Determine chain
+  let chain: SupportedChain;
+
+  if (chainType === 'solana') {
+    chain = 'solana';
+  } else {
+    // EVM - default to ethereum unless specified
+    chain = 'ethereum';
+    if (args.length > 1) {
+      const chainArg = args[1].toLowerCase();
+      const validChain = chainSchema.safeParse(chainArg);
+      if (validChain.success) {
+        chain = validChain.data;
+      }
     }
   }
 
   return {
-    address: validAddress.data,
+    address,
     chain,
+    chainType,
   };
 }
 
 // Check if string looks like an address
 export function isAddress(value: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+// Detect chain type from address format
+export function detectChainFromAddress(address: string): 'evm' | 'solana' | 'unknown' {
+  // EVM addresses: 0x followed by 40 hex characters
+  if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return 'evm';
+  }
+
+  // Solana addresses: base58, 32-44 characters, no 0x
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+    return 'solana';
+  }
+
+  return 'unknown';
 }
 
 // Normalize chain name
@@ -401,21 +444,36 @@ export function parseATHArgs(args: string[]): ATHArgs | null {
 
 export interface MoversArgs {
   limit: number;
+  category: 'majors' | 'onchain';
 }
 
 export function parseMoversArgs(args: string[]): MoversArgs {
   const defaultLimit = 5;
   const maxLimit = 10;
+  let limit = defaultLimit;
+  let category: 'majors' | 'onchain' = 'majors'; // Default to majors
 
   if (args.length === 0) {
-    return { limit: defaultLimit };
+    return { limit, category };
   }
 
-  const limit = parseInt(args[0], 10);
+  // Parse args - can be in any order
+  for (const arg of args) {
+    const normalized = arg.toLowerCase();
 
-  if (isNaN(limit) || limit <= 0) {
-    return { limit: defaultLimit };
+    // Check for category
+    if (normalized === 'onchain' || normalized === 'on-chain' || normalized === 'dex') {
+      category = 'onchain';
+    } else if (normalized === 'majors' || normalized === 'cex') {
+      category = 'majors';
+    } else {
+      // Try to parse as number
+      const num = parseInt(arg, 10);
+      if (!isNaN(num) && num > 0) {
+        limit = Math.min(num, maxLimit);
+      }
+    }
   }
 
-  return { limit: Math.min(limit, maxLimit) };
+  return { limit, category };
 }

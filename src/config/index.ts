@@ -97,7 +97,7 @@ export const config = loadConfig();
 export type Config = z.infer<typeof configSchema>;
 
 // Supported chains
-export const SUPPORTED_CHAINS = ['ethereum', 'bsc', 'polygon'] as const;
+export const SUPPORTED_CHAINS = ['ethereum', 'bsc', 'polygon', 'solana'] as const;
 export type SupportedChain = typeof SUPPORTED_CHAINS[number];
 
 // Chain configurations
@@ -128,5 +128,12 @@ export const CHAIN_CONFIG: Record<SupportedChain, {
     explorer: 'https://polygonscan.com',
     explorerApiUrl: 'https://api.polygonscan.com/api',
     coingeckoId: 'polygon-pos',
+  },
+  solana: {
+    name: 'Solana',
+    symbol: 'SOL',
+    explorer: 'https://solscan.io',
+    explorerApiUrl: 'https://public-api.solscan.io',
+    coingeckoId: 'solana',
   },
 };

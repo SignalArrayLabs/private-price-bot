@@ -13,6 +13,7 @@ import {
   formatTwitterCard,
   formatError,
   formatNotFound,
+  formatPartialScan,
 } from '../../utils/format.js';
 import { parseScanArgs, isAddress, urlSchema, twitterHandleSchema } from '../../utils/validation.js';
 import { getMentionArgs, isMentionCommand } from '../middleware/mention.js';
@@ -30,8 +31,11 @@ export async function handleScan(ctx: Context): Promise<void> {
   if (args.length === 0) {
     await ctx.reply(
       '<b>Usage:</b>\n/scan &lt;address&gt; [chain]\n\n' +
-      '<b>Chains:</b> ethereum, bsc, polygon\n\n' +
-      '<b>Example:</b>\n/scan 0x... ethereum',
+      '<b>Chains:</b> ethereum, bsc, polygon, solana\n' +
+      '<i>Chain is auto-detected from address format</i>\n\n' +
+      '<b>Examples:</b>\n' +
+      '/scan 0x... ethereum (EVM)\n' +
+      '/scan 7xKXtg... (Solana, auto-detected)',
       { parse_mode: 'HTML' }
     );
     return;
@@ -40,7 +44,7 @@ export async function handleScan(ctx: Context): Promise<void> {
   const parsed = parseScanArgs(args);
   if (!parsed) {
     await ctx.reply(
-      formatError('Invalid address format. Must be a valid EVM address (0x...).'),
+      formatError('Invalid address format. Must be a valid EVM (0x...) or Solana (base58) address.'),
       { parse_mode: 'HTML' }
     );
     return;
@@ -53,8 +57,9 @@ export async function handleScan(ctx: Context): Promise<void> {
     const security = await getContractSecurity(parsed.address, parsed.chain);
 
     if (!security) {
+      // Show partial scan instead of hard error
       await ctx.reply(
-        formatNotFound(`contract ${parsed.address}`),
+        formatPartialScan(parsed.address, parsed.chain),
         { parse_mode: 'HTML' }
       );
       return;

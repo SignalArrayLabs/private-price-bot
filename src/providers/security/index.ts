@@ -1,4 +1,5 @@
 import { EtherscanProvider } from './etherscan.js';
+import { SolscanProvider } from './solscan.js';
 import { WebsiteChecker } from './website.js';
 import type { ContractSecurity, DeployerInfo, WebsiteSimilarity, TwitterCheck } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
@@ -7,6 +8,7 @@ import { config } from '../../config/index.js';
 
 // Provider instances
 let etherscanProvider: EtherscanProvider | null = null;
+let solscanProvider: SolscanProvider | null = null;
 let websiteChecker: WebsiteChecker | null = null;
 
 // In-memory cache for security data
@@ -18,6 +20,13 @@ function getEtherscanProvider(): EtherscanProvider {
     etherscanProvider = new EtherscanProvider();
   }
   return etherscanProvider;
+}
+
+function getSolscanProvider(): SolscanProvider {
+  if (!solscanProvider) {
+    solscanProvider = new SolscanProvider();
+  }
+  return solscanProvider;
 }
 
 function getWebsiteChecker(): WebsiteChecker {
@@ -47,16 +56,23 @@ export async function getContractSecurity(
     }
   }
 
-  const provider = getEtherscanProvider();
-
   try {
-    const healthy = await provider.isHealthy();
-    if (!healthy) {
-      logger.warn({ chain }, 'Security provider unhealthy');
-      return null;
-    }
+    let data: ContractSecurity | null = null;
 
-    const data = await provider.getContractSecurity(address, chain);
+    // Route to appropriate provider based on chain
+    if (chain === 'solana') {
+      const provider = getSolscanProvider();
+      data = await provider.getContractSecurity(address);
+    } else {
+      // EVM chains (ethereum, bsc, polygon)
+      const provider = getEtherscanProvider();
+      const healthy = await provider.isHealthy();
+      if (!healthy) {
+        logger.warn({ chain }, 'Security provider unhealthy');
+        return null;
+      }
+      data = await provider.getContractSecurity(address, chain);
+    }
 
     if (data) {
       // Cache the result
@@ -94,16 +110,23 @@ export async function getDeployerInfo(
     }
   }
 
-  const provider = getEtherscanProvider();
-
   try {
-    const healthy = await provider.isHealthy();
-    if (!healthy) {
-      logger.warn({ chain }, 'Security provider unhealthy');
-      return null;
-    }
+    let data: DeployerInfo | null = null;
 
-    const data = await provider.getDeployerInfo(address, chain);
+    // Route to appropriate provider based on chain
+    if (chain === 'solana') {
+      const provider = getSolscanProvider();
+      data = await provider.getDeployerInfo(address);
+    } else {
+      // EVM chains (ethereum, bsc, polygon)
+      const provider = getEtherscanProvider();
+      const healthy = await provider.isHealthy();
+      if (!healthy) {
+        logger.warn({ chain }, 'Security provider unhealthy');
+        return null;
+      }
+      data = await provider.getDeployerInfo(address, chain);
+    }
 
     if (data) {
       // Cache the result
