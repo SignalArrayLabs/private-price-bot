@@ -2,6 +2,67 @@
 
 > **Single Source of Truth** for architecture decisions, data flows, provider configurations, API quotas, and development rules.
 
+# PROJECT CONTEXT (AUTHORITATIVE – READ FIRST)
+
+This section is the canonical, low-token project context.
+Future Claude sessions may read ONLY this section by default.
+
+--- CONTEXT START ---
+
+## Purpose
+Privacy-first Telegram bot providing crypto price lookups, alerts, leaderboards, and token security checks without requiring admin permissions or reading group messages.
+
+## Architecture
+- **Language**: TypeScript (Node.js 18+)
+- **Bot Framework**: grammY (Telegram)
+- **Database**: SQLite (better-sqlite3) - local file at `./data/bot.db`
+- **Price Providers**: CoinGecko (primary) → CoinCap → Binance (fallback chain)
+- **Security Providers**: Etherscan, BSCScan, PolygonScan
+- **Caching**: Two-tier (in-memory Map + SQLite)
+- **Scheduling**: node-cron for alert evaluation and watchlist updates
+- **Logging**: Pino with redaction (no message content logged)
+- **Validation**: Zod schemas for all inputs
+- **Testing**: Vitest + MSW (Mock Service Worker)
+
+## Environments & Authority
+- **GitHub**: Single source of truth - `https://github.com/SignalArrayLabs/private-price-bot.git`
+- **MacBook (Development)**:
+  - Location: `~/Projects/private-price-bot`
+  - Command: `npm run dev`
+  - Bot: @SignalArrayPriceDevBot (development token)
+  - Database: `./data/bot-dev.db`
+- **Hetzner (Production)**:
+  - Server: 116.203.227.198 (ubuntu-8gb-nbg1-1)
+  - Location: `/root/bots/private-price-bot` [ASSUMED - conflicts with VPS_DEPLOYMENT.md]
+  - Process Manager: PM2
+  - Bot: @SignalArrayPriceBot (production token)
+  - Database: `./data/bot.db`
+  - Deploy: SSH → git pull → npm install → pm2 restart
+
+## Branching & Deployment Rules
+- **Main Branch**: `main` (default, stable)
+- **Development Workflow**: Feature branch → test locally → merge to main → deploy to production
+- **No Direct Edits**: All changes via Git; no manual edits on Hetzner
+- **Deployment**: Manual git pull + PM2 restart (no CI/CD currently)
+
+## How to Run Tests
+```bash
+npm test              # Run all tests (Vitest)
+npm run test:watch    # Watch mode
+npm run dev           # Development server with hot reload
+npm run build         # Compile TypeScript
+npm start             # Production mode (local)
+```
+
+## Current Phase
+Active development. Core features implemented: price lookups, alerts, calls, leaderboards, security scans. Additional features added: gas prices, trending tokens, Fear & Greed Index, top gainers/losers, currency conversion, ATH tracking.
+
+--- CONTEXT END ---
+
+# Deep Planning (DO NOT AUTO-READ)
+The sections below contain detailed planning, history, and exploratory notes.
+They must not be read unless explicitly instructed.
+
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
