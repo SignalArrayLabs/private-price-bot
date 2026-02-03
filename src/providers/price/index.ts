@@ -5,6 +5,7 @@ import { CoinGeckoProvider } from './coingecko.js';
 import { CoinCapProvider } from './coincap.js';
 import { BinanceProvider } from './binance.js';
 import { DexScreenerProvider } from './dexscreener.js';
+import { isAddress } from '../../utils/validation.js';
 import type { PriceData, TokenInfo, PriceProvider } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
 
@@ -44,6 +45,8 @@ function getCacheKey(symbolOrAddress: string, chain?: SupportedChain): string {
 }
 
 // Get price with caching and fallback
+// Routing: Contract addresses → DexScreener (auto-detect chain)
+//          Symbols → CoinGecko fallback chain
 export async function getPrice(
   symbolOrAddress: string,
   chain?: SupportedChain,
@@ -73,7 +76,81 @@ export async function getPrice(
     }
   }
 
-  // Try providers in order
+  // Route based on input type
+  // Contract addresses go directly to DexScreener (primary use case for on-chain tokens)
+  // Symbols use traditional CoinGecko fallback chain (for majors like BTC, ETH)
+  if (isAddress(symbolOrAddress)) {
+    return await getPriceForAddress(symbolOrAddress, chain, cacheKey);
+  }
+
+  return await getPriceForSymbol(symbolOrAddress, chain, cacheKey);
+}
+
+// Get price for contract address - DexScreener with auto-chain detection
+async function getPriceForAddress(
+  address: string,
+  chain: SupportedChain | undefined,
+  cacheKey: string
+): Promise<PriceData | null> {
+  const dexScreener = getProvider('dexscreener');
+  if (!dexScreener) {
+    logger.error('DexScreener provider not initialized');
+    return null;
+  }
+
+  // If chain is specified, try that chain only
+  if (chain) {
+    const data = await tryDexScreener(dexScreener, address, chain);
+    if (data) {
+      cachePrice(cacheKey, data);
+      return data;
+    }
+    logger.warn({ address, chain }, 'Token not found on specified chain');
+    return null;
+  }
+
+  // Auto-detect chain: try each supported chain
+  const chainsToTry: SupportedChain[] = ['ethereum', 'bsc', 'polygon'];
+
+  for (const tryChain of chainsToTry) {
+    const data = await tryDexScreener(dexScreener, address, tryChain);
+    if (data) {
+      logger.debug({ address, chain: tryChain }, 'Token found via auto-detection');
+      cachePrice(cacheKey, data);
+      return data;
+    }
+  }
+
+  logger.warn({ address }, 'Token not found on any supported DEX chain');
+  return null;
+}
+
+// Helper to try DexScreener for a specific chain
+async function tryDexScreener(
+  provider: PriceProvider,
+  address: string,
+  chain: SupportedChain
+): Promise<PriceData | null> {
+  try {
+    const healthy = await provider.isHealthy();
+    if (!healthy) {
+      logger.debug('DexScreener unhealthy, skipping');
+      return null;
+    }
+    return await provider.getPrice(address, chain);
+  } catch (error) {
+    logger.debug({ address, chain, error }, 'DexScreener lookup failed');
+    return null;
+  }
+}
+
+// Get price for symbol - CoinGecko fallback chain
+async function getPriceForSymbol(
+  symbol: string,
+  chain: SupportedChain | undefined,
+  cacheKey: string
+): Promise<PriceData | null> {
+  // Use traditional fallback order for symbols (majors)
   const providerOrder = getProviderOrder();
 
   for (const providerName of providerOrder) {
@@ -88,34 +165,43 @@ export async function getPrice(
     }
 
     try {
-      const data = await provider.getPrice(symbolOrAddress, chain);
+      const data = await provider.getPrice(symbol, chain);
       if (data) {
-        // Cache the result
-        const ttl = config.cacheTtlPrice;
-        memoryCache.set(cacheKey, {
-          data,
-          expiry: Date.now() + ttl * 1000,
-        });
-        setCachedPrice(symbolOrAddress, data, ttl, chain);
-
+        cachePrice(cacheKey, data);
         logger.debug({
           provider: providerName,
-          symbol: symbolOrAddress,
+          symbol,
         }, 'Price fetched successfully');
-
         return data;
       }
     } catch (error) {
       logger.warn({
         provider: providerName,
-        symbol: symbolOrAddress,
+        symbol,
         error: error instanceof Error ? error.message : 'Unknown error',
       }, 'Provider failed, trying next');
     }
   }
 
-  logger.warn({ symbol: symbolOrAddress }, 'All providers failed');
+  logger.warn({ symbol }, 'All providers failed');
   return null;
+}
+
+// Helper to cache price data
+function cachePrice(cacheKey: string, data: PriceData): void {
+  const ttl = config.cacheTtlPrice;
+  memoryCache.set(cacheKey, {
+    data,
+    expiry: Date.now() + ttl * 1000,
+  });
+  // Extract symbol for DB cache
+  const [symbolOrAddress, chain] = cacheKey.split(':');
+  setCachedPrice(
+    symbolOrAddress,
+    data,
+    ttl,
+    chain !== 'default' ? chain as SupportedChain : undefined
+  );
 }
 
 // Search for tokens
