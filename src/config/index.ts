@@ -1,7 +1,11 @@
-import { config as dotenvConfig } from 'dotenv';
 import { z } from 'zod';
+import { loadValidatedEnv } from '../tools/env/load-env.js';
 
-dotenvConfig();
+const { envFile, envSource } = loadValidatedEnv();
+
+// Store globally for identity logger
+(globalThis as any).__envFile = envFile;
+(globalThis as any).__envSource = envSource;
 
 const configSchema = z.object({
   // Telegram

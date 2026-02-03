@@ -1,0 +1,52 @@
+[
+  {
+    "url": "https://dexscreener.com/solana/7f2ughaa75pmlcxnrbbcaei2cp7xfxscsrlzwbciefh3",
+    "chainId": "solana",
+    "tokenAddress": "7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3",
+    "description": "you will eat the goyslop",
+    "icon": "c7ee099acd24ff8b6a510e6aae2a6511d237ae26716718a52d839409cb7057a7",
+    "header": "https://cdn.dexscreener.com/cms/images/48437aab84f857cb9a42694772bfdfe2cb7fc17bf2523680a16735700d4622e9?width=900&height=300&fit=crop&quality=95&format=auto",
+    "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3?timestamp=1770070500000",
+    "links": [
+      {
+        "url": "https://www.goyslop.gg/"
+      },
+      {
+        "type": "twitter",
+        "url": "https://x.com/i/communities/2018374663064125745/"
+      }
+    ],
+    "totalAmount": 1500
+  },
+  {
+    "url": "https://dexscreener.com/solana/wn6bizx63rrzvvxdyrtr4tz99684hssdxa1h4uqpump",
+    "chainId": "solana",
+    "tokenAddress": "wn6biZX63RRzvvxdYrTR4Tz99684hssdXa1H4Uqpump",
+    "description": "The bowhead whale (Balaena mysticetus) is recognized as the longest-lived mammal on Earth, with scientists estimating that these Arctic giants can live for over 200 years.",
+    "icon": "dfec406d53240c97606ed1cfb5f362e779cff17eabfc155c64d127a400f30eed",
+    "header": "https://cdn.dexscreener.com/cms/images/e0021ca940a2992b57d9b1f1511fe966d3169bbd940bbf4a6527ba688c71924d?width=900&height=300&fit=crop&quality=95&format=auto",
+    "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/wn6biZX63RRzvvxdYrTR4Tz99684hssdXa1H4Uqpump?timestamp=1770070500000",
+    "links": [
+      {
+        "type": "twitter",
+        "url": "https://x.com/i/communities/2018387094092251447"
+      }
+    ],
+    "totalAmount": 1000
+  },
+  {
+    "url": "https://dexscreener.com/solana/drpkt6fvjl3yb25gn3zggwkkwuamkkm2epaxufgpump",
+    "chainId": "solana",
+    "tokenAddress": "dRpKt6fvjL3yb25gn3ZGGwkkwuAmkKM2EPAXufgpump",
+    "icon": "7268db85954c0bba7cac2d63e0841e525bfdf7b8cb426f53da55d9871817f496",
+    "header": "https://cdn.dexscreener.com/cms/images/d55b93fbf45b024110ad618e7bd3f3aacb5eb6f4e16b4a06d4dac513c882fcca?width=900&height=300&fit=crop&quality=95&format=auto",
+    "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/dRpKt6fvjL3yb25gn3ZGGwkkwuAmkKM2EPAXufgpump?timestamp=1770070500000",
+    "links": [
+      {
+        "type": "twitter",
+        "url": "https://x.com/lolitaexpress_?s=21"
+      }
+    ],
+    "totalAmount": 500
+  }
+]

@@ -14,6 +14,7 @@ export interface PriceData {
   lastUpdated: Date;
   chain?: SupportedChain;
   address?: string;
+  dexScreenerUrl?: string; // Link to exact DexScreener pair used
 }
 
 export interface TokenInfo {

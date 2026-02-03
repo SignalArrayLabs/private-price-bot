@@ -1,9 +1,11 @@
 import type { Context } from 'grammy';
+import { Keyboard } from 'grammy';
 import { formatHelpCard, formatPrivacyCard, formatStatusCard } from '../../utils/format.js';
 import { getProviderStatus } from '../../providers/price/index.js';
 import { getSecurityProviderStatus } from '../../providers/security/index.js';
 import { getAllActiveAlerts, getAllWatchlistItems } from '../../db/index.js';
 import { getSchedulerStatus } from '../../services/scheduler.js';
+import { getIdentity } from '../../utils/identity.js';
 
 // Bot start time for uptime calculation
 const startTime = Date.now();
@@ -19,7 +21,17 @@ A privacy-first crypto price bot that:
 Type /help to see available commands.
 Type /privacy to learn about data handling.`;
 
-  await ctx.reply(message, { parse_mode: 'HTML' });
+  // Create persistent keyboard
+  const keyboard = new Keyboard()
+    .text('💰 Price').text('🚀 Gainers').text('📉 Losers').row()
+    .text('🔍 Scan').text('🔔 Alerts').text('🏆 Board')
+    .resized()
+    .persistent();
+
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    reply_markup: keyboard,
+  });
 }
 
 export async function handleHelp(ctx: Context): Promise<void> {
@@ -31,6 +43,7 @@ export async function handlePrivacy(ctx: Context): Promise<void> {
 }
 
 export async function handleStatus(ctx: Context): Promise<void> {
+  const identity = await getIdentity(ctx.api);
   const priceProviderStatus = await getProviderStatus();
   const securityProviderStatus = await getSecurityProviderStatus();
   const alerts = getAllActiveAlerts();
@@ -51,6 +64,11 @@ export async function handleStatus(ctx: Context): Promise<void> {
     cacheSize: 0,
     alertCount: alerts.length,
     watchlistCount: watchlist.length,
+    gitCommit: identity.gitCommit,
+    gitBranch: identity.gitBranch,
+    gitDirty: identity.gitDirty,
+    botUsername: identity.botUsername,
+    envSource: identity.envSource,
   });
 
   await ctx.reply(statusCard, { parse_mode: 'HTML' });

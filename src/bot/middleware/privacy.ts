@@ -15,9 +15,10 @@ export async function privacyMiddleware(ctx: Context, next: NextFunction): Promi
   // Determine if this is a command or mention
   const isCommand = ctx.message?.text?.startsWith('/');
   const isMention = checkIsMention(ctx);
+  const isKeyboardButton = checkIsKeyboardButton(ctx);
 
-  if (!isCommand && !isMention) {
-    // Not a command or mention - DO NOT PROCESS
+  if (!isCommand && !isMention && !isKeyboardButton) {
+    // Not a command, mention, or keyboard button - DO NOT PROCESS
     // This ensures we don't read general chat messages
     return;
   }
@@ -52,6 +53,25 @@ function checkIsMention(ctx: Context): boolean {
   }
 
   return false;
+}
+
+/**
+ * Check if the message is from a keyboard button
+ */
+function checkIsKeyboardButton(ctx: Context): boolean {
+  const text = ctx.message?.text ?? '';
+
+  // List of keyboard button texts
+  const keyboardButtons = [
+    '💰 Price',
+    '🚀 Gainers',
+    '📉 Losers',
+    '🔍 Scan',
+    '🔔 Alerts',
+    '🏆 Board',
+  ];
+
+  return keyboardButtons.includes(text);
 }
 
 /**

@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "cp .env.development .env && tsx watch src/index.ts",
+    "validate:env": "tsx src/tools/env/validate-env-cli.ts",
+    "dev": "npm run validate:env && cp .env.development .env && tsx watch src/index.ts",
     "start": "node dist/index.js",
     "start:prod": "cp .env.production .env && node dist/index.js",
     "test": "vitest run",

@@ -88,6 +88,31 @@ export function createBot(): Bot {
   // Handle callback queries (inline keyboard buttons)
   bot.on('callback_query:data', handleCallback);
 
+  // Handle keyboard button presses
+  bot.hears('💰 Price', async (ctx) => {
+    await ctx.reply('Use: /p <symbol>\nExample: /p BTC', { parse_mode: 'HTML' });
+  });
+
+  bot.hears('🚀 Gainers', async (ctx) => {
+    await handleGainers(ctx);
+  });
+
+  bot.hears('📉 Losers', async (ctx) => {
+    await handleLosers(ctx);
+  });
+
+  bot.hears('🔍 Scan', async (ctx) => {
+    await ctx.reply('Use: /scan <address> [chain]\nExample: /scan 0x...', { parse_mode: 'HTML' });
+  });
+
+  bot.hears('🔔 Alerts', async (ctx) => {
+    await ctx.reply('Use: /alert list to see alerts\n/alert add <symbol> <above|below> <price>', { parse_mode: 'HTML' });
+  });
+
+  bot.hears('🏆 Board', async (ctx) => {
+    await ctx.reply('Use: /lb to see the leaderboard', { parse_mode: 'HTML' });
+  });
+
   // Handle mention-triggered commands
   bot.on('message:text', async (ctx) => {
     const mentionCtx = getMentionContext(ctx);

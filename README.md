@@ -77,6 +77,63 @@ npm start
 
 ---
 
+## Configuration Safety
+
+This bot includes **environment safety controls** to prevent configuration drift between dev/prod:
+
+### Automatic Validation
+
+All npm scripts validate `.env` syntax before running:
+
+```bash
+npm run dev        # Validates .env.development first
+npm run start      # Validates .env first
+npm run start:prod # Validates .env.production first
+```
+
+If your `.env` file has invalid syntax, the bot **fails immediately** with clear error messages.
+
+### Validation Rules
+
+Your `.env` file must follow these rules:
+
+- **Keys**: `UPPERCASE_SNAKE_CASE` (e.g., `TELEGRAM_BOT_TOKEN`)
+- **Format**: `KEY=value` (no spaces around `=`)
+- **Comments**: Lines starting with `#`
+- **Empty lines**: Allowed
+
+**Invalid examples**:
+```env
+CLAUDE.md              # ❌ No = separator
+KEY = value            # ❌ Spaces around =
+my_key=value           # ❌ Lowercase key
+```
+
+### Identity Logging
+
+The bot logs its identity at startup:
+
+- **Git commit hash** and branch
+- **Bot username** and ID
+- **Environment source** (development/production)
+- **Node version**
+
+View anytime with the `/status` command in Telegram.
+
+### Manual Validation
+
+Validate your `.env` file manually:
+
+```bash
+npm run validate:env
+```
+
+### Documentation
+
+See `src/tools/env/README.md` for complete validation rules and API reference.
+
+---
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |

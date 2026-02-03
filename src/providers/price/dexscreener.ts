@@ -129,14 +129,15 @@ export class DexScreenerProvider extends BasePriceProvider {
         return null;
       }
 
-      // If multiple tokens match, pick the one with highest total liquidity
+      // If multiple tokens match, pick the one with highest total VOLUME (not liquidity)
+      // This avoids selecting fake tokens with inflated liquidity but no real trading
       let bestTokenPairs: DexScreenerPair[] = [];
-      let maxLiquidity = 0;
+      let maxVolume = 0;
 
       for (const tokenPairs of grouped.values()) {
-        const totalLiquidity = tokenPairs.reduce((sum, p) => sum + (p.liquidity?.usd ?? 0), 0);
-        if (totalLiquidity > maxLiquidity) {
-          maxLiquidity = totalLiquidity;
+        const totalVolume = tokenPairs.reduce((sum, p) => sum + (p.volume?.h24 ?? 0), 0);
+        if (totalVolume > maxVolume) {
+          maxVolume = totalVolume;
           bestTokenPairs = tokenPairs;
         }
       }
@@ -182,6 +183,14 @@ export class DexScreenerProvider extends BasePriceProvider {
       ...topPairs.map(p => p.marketCap ?? p.fdv ?? 0)
     );
 
+    // Build DexScreener URL for the reference pair
+    const dexScreenerUrl = `https://dexscreener.com/${refPair.chainId}/${refPair.pairAddress}`;
+
+    // Debug logging
+    console.log('[DEBUG] Selected pair:', refPair.baseToken.symbol, 'on', refPair.chainId,
+                'liquidity:', refPair.liquidity?.usd, 'volume:', refPair.volume?.h24,
+                'total aggregated volume:', totalVolume, 'from', topPairs.length, 'pairs');
+
     return {
       symbol: refPair.baseToken.symbol.toUpperCase(),
       name: refPair.baseToken.name,
@@ -189,11 +198,12 @@ export class DexScreenerProvider extends BasePriceProvider {
       priceChange24h: price * (refPair.priceChange?.h24 ?? 0) / 100,
       priceChangePercent24h: refPair.priceChange?.h24 ?? 0,
       marketCap,
-      volume24h: totalVolume, // FIXED: Aggregated across all pairs
+      volume24h: totalVolume, // Aggregated across all pairs
       high24h: 0, // DexScreener doesn't provide this
       low24h: 0,  // DexScreener doesn't provide this
       lastUpdated: new Date(),
       address: refPair.baseToken.address,
+      dexScreenerUrl, // Link to the exact pair used
     };
   }
 

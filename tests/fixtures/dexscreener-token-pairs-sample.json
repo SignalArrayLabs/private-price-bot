@@ -1,0 +1,232 @@
+{
+  "pairs": [
+    {
+      "chainId": "solana",
+      "dexId": "raydium",
+      "url": "https://dexscreener.com/solana/gjvjt99qmwdeaf3zjvsfjtruunjml42rizrjbmwsjiee",
+      "pairAddress": "GJVJt99QmWDEaF3ZjvSFjtrUunjmL42riZrJBMwSJiee",
+      "baseToken": {
+        "address": "7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3",
+        "name": "Goyslop",
+        "symbol": "Goyslop"
+      },
+      "quoteToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "name": "Wrapped SOL",
+        "symbol": "SOL"
+      },
+      "priceNative": "0.0000001948",
+      "priceUsd": "0.00002045",
+      "txns": {
+        "m5": {
+          "buys": 321,
+          "sells": 11
+        },
+        "h1": {
+          "buys": 1993,
+          "sells": 594
+        },
+        "h6": {
+          "buys": 5084,
+          "sells": 2738
+        },
+        "h24": {
+          "buys": 5084,
+          "sells": 2738
+        }
+      },
+      "volume": {
+        "h24": 461990.4,
+        "h6": 461990.4,
+        "h1": 71619.23,
+        "m5": 1131.18
+      },
+      "priceChange": {
+        "m5": -12.98,
+        "h1": -65.25,
+        "h6": 3716,
+        "h24": 3716
+      },
+      "liquidity": {
+        "usd": 7294.9,
+        "base": 201364483,
+        "quote": 30.2537
+      },
+      "fdv": 20455,
+      "marketCap": 20455,
+      "pairCreatedAt": 1770054886000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/c7ee099acd24ff8b6a510e6aae2a6511d237ae26716718a52d839409cb7057a7?width=800&height=800&quality=90",
+        "header": "https://cdn.dexscreener.com/cms/images/48437aab84f857cb9a42694772bfdfe2cb7fc17bf2523680a16735700d4622e9?width=1500&height=500&quality=90",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3?timestamp=1770070500000",
+        "websites": [
+          {
+            "url": "https://www.goyslop.gg/",
+            "label": "Website"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/i/communities/2018374663064125745/",
+            "type": "twitter"
+          }
+        ]
+      },
+      "boosts": {
+        "active": 1500
+      }
+    },
+    {
+      "chainId": "solana",
+      "dexId": "meteora",
+      "url": "https://dexscreener.com/solana/9nejkizeabkrbde2xv5ocugte6t2qzpsevmbeqmeasun",
+      "pairAddress": "9nEJKiZeABkrbde2Xv5ocUGTe6t2qzPSEvMBeqmeasun",
+      "labels": [
+        "DYN2"
+      ],
+      "baseToken": {
+        "address": "7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3",
+        "name": "Goyslop",
+        "symbol": "Goyslop"
+      },
+      "quoteToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "name": "Wrapped SOL",
+        "symbol": "SOL"
+      },
+      "priceNative": "0.0000002422",
+      "priceUsd": "0.00002535",
+      "txns": {
+        "m5": {
+          "buys": 0,
+          "sells": 0
+        },
+        "h1": {
+          "buys": 0,
+          "sells": 0
+        },
+        "h6": {
+          "buys": 1,
+          "sells": 0
+        },
+        "h24": {
+          "buys": 1,
+          "sells": 0
+        }
+      },
+      "volume": {
+        "h24": 0,
+        "h6": 0,
+        "h1": 0,
+        "m5": 0
+      },
+      "priceChange": {},
+      "liquidity": {
+        "usd": 13.03,
+        "base": 256860,
+        "quote": 0.0623
+      },
+      "fdv": 25356,
+      "marketCap": 25356,
+      "pairCreatedAt": 1770054887000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/c7ee099acd24ff8b6a510e6aae2a6511d237ae26716718a52d839409cb7057a7?width=800&height=800&quality=90",
+        "header": "https://cdn.dexscreener.com/cms/images/48437aab84f857cb9a42694772bfdfe2cb7fc17bf2523680a16735700d4622e9?width=1500&height=500&quality=90",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3?timestamp=1770070500000",
+        "websites": [
+          {
+            "url": "https://www.goyslop.gg/",
+            "label": "Website"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/i/communities/2018374663064125745/",
+            "type": "twitter"
+          }
+        ]
+      },
+      "boosts": {
+        "active": 1500
+      }
+    },
+    {
+      "chainId": "solana",
+      "dexId": "meteora",
+      "url": "https://dexscreener.com/solana/8rn35jnuws1sjg4yki6deg5xyd1guvekv64tckbfglsw",
+      "pairAddress": "8RN35JNuWs1sJg4yki6DEg5XYd1gUVEkv64tcKBFGLSW",
+      "labels": [
+        "DYN2"
+      ],
+      "baseToken": {
+        "address": "7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3",
+        "name": "Goyslop",
+        "symbol": "Goyslop"
+      },
+      "quoteToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "name": "Wrapped SOL",
+        "symbol": "SOL"
+      },
+      "priceNative": "0.0000001762",
+      "priceUsd": "0.00001845",
+      "txns": {
+        "m5": {
+          "buys": 0,
+          "sells": 0
+        },
+        "h1": {
+          "buys": 0,
+          "sells": 10
+        },
+        "h6": {
+          "buys": 20,
+          "sells": 18
+        },
+        "h24": {
+          "buys": 20,
+          "sells": 18
+        }
+      },
+      "volume": {
+        "h24": 3.87,
+        "h6": 3.87,
+        "h1": 1.57,
+        "m5": 0
+      },
+      "priceChange": {
+        "h1": -68.06,
+        "h6": -49.98,
+        "h24": -49.98
+      },
+      "liquidity": {
+        "usd": 3.73,
+        "base": 104088,
+        "quote": 0.01728
+      },
+      "fdv": 18459,
+      "marketCap": 18459,
+      "pairCreatedAt": 1770055319000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/c7ee099acd24ff8b6a510e6aae2a6511d237ae26716718a52d839409cb7057a7?width=800&height=800&quality=90",
+        "header": "https://cdn.dexscreener.com/cms/images/48437aab84f857cb9a42694772bfdfe2cb7fc17bf2523680a16735700d4622e9?width=1500&height=500&quality=90",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/7f2UGHAA75PMLCXnRbbcaEi2CP7xFXSCSrLZWbciefH3?timestamp=1770070500000",
+        "websites": [
+          {
+            "url": "https://www.goyslop.gg/",
+            "label": "Website"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/i/communities/2018374663064125745/",
+            "type": "twitter"
+          }
+        ]
+      },
+      "boosts": {
+        "active": 1500
+      }
+    }
+  ]
+}

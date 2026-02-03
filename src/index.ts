@@ -2,8 +2,13 @@ import { logger } from './utils/logger.js';
 import { initDb, closeDb } from './db/index.js';
 import { createBot, startBot, stopBot } from './bot/index.js';
 import { startScheduler, stopScheduler } from './services/scheduler.js';
+import { getIdentity, logIdentity } from './utils/identity.js';
 
 async function main() {
+  // Log bot identity for traceability
+  const identityPreBot = await getIdentity();
+  logIdentity(identityPreBot);
+
   logger.info('Starting Private Price Bot...');
 
   // Initialize database
@@ -40,6 +45,10 @@ async function main() {
   // Start bot
   try {
     await startBot(bot);
+
+    // Update identity with bot info now that bot is initialized
+    const identity = await getIdentity(bot.api);
+    logIdentity(identity);
   } catch (error) {
     logger.error({
       error: error instanceof Error ? error.message : 'Unknown error',

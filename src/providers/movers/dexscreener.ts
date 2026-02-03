@@ -23,8 +23,8 @@ interface DexScreenerPair {
   pairCreatedAt?: number;
 }
 
-interface DexScreenerSearchResponse {
-  pairs: DexScreenerPair[];
+interface DexScreenerPairsResponse {
+  pairs?: DexScreenerPair[];
 }
 
 // In-memory cache
@@ -41,40 +41,69 @@ const MIN_PAIR_AGE_HOURS = 1; // 1 hour old
 
 async function fetchOnChainMovers(ascending: boolean, limit: number): Promise<MoverToken[]> {
   try {
-    const baseUrl = 'https://api.dexscreener.com/latest';
+    // Fetch trending tokens first
+    const boostsUrl = 'https://api.dexscreener.com/token-boosts/top/v1';
 
-    // Strategy: Search for empty query to get trending/recent pairs
-    // Then filter and sort by price change
-    const url = `${baseUrl}/dex/search?q=`;
+    const controller1 = new AbortController();
+    const timeoutId1 = setTimeout(() => controller1.abort(), 10000);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'PrivatePriceBot/1.0',
-      },
+    const boostsResponse = await fetch(boostsUrl, {
+      signal: controller1.signal,
+      headers: { 'Accept': 'application/json' },
     });
 
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId1);
 
-    if (!response.ok) {
-      logger.warn({ status: response.status }, 'DexScreener movers API returned non-OK status');
+    if (!boostsResponse.ok) {
+      logger.warn({ status: boostsResponse.status }, 'DexScreener boosts API failed');
       return [];
     }
 
-    const data = await response.json() as DexScreenerSearchResponse;
+    const boostedTokens = await boostsResponse.json();
 
-    if (!Array.isArray(data.pairs) || data.pairs.length === 0) {
+    if (!Array.isArray(boostedTokens) || boostedTokens.length === 0) {
+      return [];
+    }
+
+    // Fetch pairs for each token address (limit to first 10 to avoid rate limits)
+    const pairs: DexScreenerPair[] = [];
+    const tokensToFetch = boostedTokens.slice(0, 10);
+
+    for (const token of tokensToFetch) {
+      if (!token.tokenAddress || !token.chainId) continue;
+
+      try {
+        const pairsUrl = `https://api.dexscreener.com/latest/dex/tokens/${token.tokenAddress}`;
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 5000);
+
+        const pairsResponse = await fetch(pairsUrl, {
+          signal: controller2.signal,
+          headers: { 'Accept': 'application/json' },
+        });
+
+        clearTimeout(timeoutId2);
+
+        if (pairsResponse.ok) {
+          const pairsData = await pairsResponse.json() as DexScreenerPairsResponse;
+          if (pairsData.pairs && Array.isArray(pairsData.pairs)) {
+            pairs.push(...pairsData.pairs);
+          }
+        }
+      } catch (error) {
+        // Skip this token and continue
+        continue;
+      }
+    }
+
+    if (pairs.length === 0) {
       return [];
     }
 
     const now = Date.now();
 
     // Filter pairs by minimum criteria
-    const filtered = data.pairs.filter(pair => {
+    const filtered = pairs.filter(pair => {
       const liquidity = pair.liquidity?.usd ?? 0;
       const volume = pair.volume?.h24 ?? 0;
       const priceChange = pair.priceChange?.h24 ?? 0;

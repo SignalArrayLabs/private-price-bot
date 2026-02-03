@@ -62,6 +62,9 @@ export async function handleCallback(ctx: Context): Promise<void> {
       case 'help':
         await handleHelpCallback(ctx);
         break;
+      case 'nav':
+        await handleNavCallback(ctx, params);
+        break;
       default:
         await ctx.answerCallbackQuery({ text: 'Unknown action' });
     }
@@ -496,4 +499,30 @@ async function handleConvertCallback(ctx: Context, params: string[]): Promise<vo
 async function handleHelpCallback(ctx: Context): Promise<void> {
   await ctx.answerCallbackQuery();
   await ctx.reply(formatHelpCard(), { parse_mode: 'HTML' });
+}
+
+async function handleNavCallback(ctx: Context, params: string[]): Promise<void> {
+  const [action] = params;
+  await ctx.answerCallbackQuery();
+
+  switch (action) {
+    case 'price':
+      await ctx.reply('Use: /p &lt;symbol&gt;\nExample: /p BTC', { parse_mode: 'HTML' });
+      break;
+    case 'gainers':
+      await handleGainersCallback(ctx, ['5', 'majors']);
+      break;
+    case 'losers':
+      await handleLosersCallback(ctx, ['5', 'majors']);
+      break;
+    case 'scan':
+      await ctx.reply('Use: /scan &lt;address&gt; [chain]\nExample: /scan 0x...', { parse_mode: 'HTML' });
+      break;
+    case 'alerts':
+      await ctx.reply('Use: /alert list to see alerts\n/alert add &lt;symbol&gt; &lt;above|below&gt; &lt;price&gt;', { parse_mode: 'HTML' });
+      break;
+    case 'leaderboard':
+      await ctx.reply('Use: /lb to see the leaderboard', { parse_mode: 'HTML' });
+      break;
+  }
 }

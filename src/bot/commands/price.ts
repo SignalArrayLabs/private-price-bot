@@ -58,6 +58,16 @@ export async function handlePrice(ctx: Context): Promise<void> {
       keyboard.row().text('🔍 Security', `scan:${parsed.symbolOrAddress}:${parsed.chain ?? 'ethereum'}`);
     }
 
+    // Add bottom navigation row
+    keyboard.row()
+      .text('💰 Price', 'nav:price')
+      .text('🚀 Gainers', 'nav:gainers')
+      .text('📉 Losers', 'nav:losers')
+      .row()
+      .text('🔍 Scan', 'nav:scan')
+      .text('🔔 Alerts', 'nav:alerts')
+      .text('🏆 Board', 'nav:leaderboard');
+
     await ctx.reply(formatPriceCard(priceData, config.priceProvider), {
       parse_mode: 'HTML',
       reply_markup: keyboard,
@@ -99,6 +109,16 @@ export async function handleDefault(ctx: Context): Promise<void> {
 
     const keyboard = new InlineKeyboard()
       .text('🔄 Refresh', `refresh:${defaultConfig.token}:${defaultConfig.chain ?? ''}`);
+
+    // Add bottom navigation row
+    keyboard.row()
+      .text('💰 Price', 'nav:price')
+      .text('🚀 Gainers', 'nav:gainers')
+      .text('📉 Losers', 'nav:losers')
+      .row()
+      .text('🔍 Scan', 'nav:scan')
+      .text('🔔 Alerts', 'nav:alerts')
+      .text('🏆 Board', 'nav:leaderboard');
 
     await ctx.reply(formatPriceCard(priceData, config.priceProvider), {
       parse_mode: 'HTML',

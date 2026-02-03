@@ -125,6 +125,11 @@ export function formatPriceCard(data: PriceData, provider: string): string {
   message += `\n🕐 <i>Updated: ${escapeHtml(formatTimeAgo(data.lastUpdated))}</i>\n`;
   message += `📡 <i>Source: ${escapeHtml(provider)}</i>`;
 
+  // Add clickable DexScreener link if available
+  if (data.dexScreenerUrl) {
+    message += `\n🔗 <a href="${data.dexScreenerUrl}">View on DexScreener</a>`;
+  }
+
   return message;
 }
 
@@ -372,13 +377,38 @@ export function formatStatusCard(status: {
   cacheSize: number;
   alertCount: number;
   watchlistCount: number;
+  gitCommit?: string;
+  gitBranch?: string;
+  gitDirty?: boolean;
+  botUsername?: string;
+  envSource?: string;
 }): string {
   const uptimeHours = Math.floor(status.uptime / 3600);
   const uptimeMinutes = Math.floor((status.uptime % 3600) / 60);
 
   let message = `<b>📊 Bot Status</b>\n\n`;
   message += `⏱️ <b>Uptime:</b> ${uptimeHours}h ${uptimeMinutes}m\n`;
-  message += `💾 <b>Cache Size:</b> ${status.cacheSize} entries\n`;
+
+  // Identity section
+  if (status.gitCommit || status.botUsername || status.envSource) {
+    message += '\n<b>🔧 Identity</b>\n';
+    if (status.gitCommit) {
+      const dirtyFlag = status.gitDirty ? ' (dirty)' : '';
+      message += `📌 <b>Version:</b> ${escapeHtml(status.gitCommit)}${dirtyFlag}`;
+      if (status.gitBranch) {
+        message += ` (${escapeHtml(status.gitBranch)})`;
+      }
+      message += '\n';
+    }
+    if (status.botUsername) {
+      message += `🤖 <b>Bot:</b> @${escapeHtml(status.botUsername)}\n`;
+    }
+    if (status.envSource) {
+      message += `🌍 <b>Env:</b> ${escapeHtml(status.envSource)}\n`;
+    }
+  }
+
+  message += `\n💾 <b>Cache Size:</b> ${status.cacheSize} entries\n`;
   message += `🔔 <b>Active Alerts:</b> ${status.alertCount}\n`;
   message += `👀 <b>Watchlist Items:</b> ${status.watchlistCount}\n\n`;
 
@@ -641,8 +671,8 @@ export function formatGainersCard(tokens: MoverToken[], source?: string): string
   let message = `<b>🚀 Top Gainers (24h)</b>\n\n`;
 
   tokens.forEach((token, index) => {
-    message += `${index + 1}. <b>${escapeHtml(token.symbol.toUpperCase())}</b> ${escapeHtml(formatPercentage(token.priceChangePercent24h))}\n`;
-    message += `   $${escapeHtml(formatPrice(token.price))} | MC: $${escapeHtml(formatLargeNumber(token.marketCap))}\n`;
+    const tvLink = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(token.symbol.toUpperCase())}USDT`;
+    message += `${index + 1}. <a href="${tvLink}">${escapeHtml(token.symbol.toUpperCase())}</a> ${escapeHtml(formatPercentage(token.priceChangePercent24h))} | $${escapeHtml(formatPrice(token.price))} | MC: $${escapeHtml(formatLargeNumber(token.marketCap))}\n`;
   });
 
   message += `\n🕐 <i>Updated: just now</i>`;
@@ -663,8 +693,8 @@ export function formatLosersCard(tokens: MoverToken[], source?: string): string 
   let message = `<b>📉 Top Losers (24h)</b>\n\n`;
 
   tokens.forEach((token, index) => {
-    message += `${index + 1}. <b>${escapeHtml(token.symbol.toUpperCase())}</b> ${escapeHtml(formatPercentage(token.priceChangePercent24h))}\n`;
-    message += `   $${escapeHtml(formatPrice(token.price))} | MC: $${escapeHtml(formatLargeNumber(token.marketCap))}\n`;
+    const tvLink = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(token.symbol.toUpperCase())}USDT`;
+    message += `${index + 1}. <a href="${tvLink}">${escapeHtml(token.symbol.toUpperCase())}</a> ${escapeHtml(formatPercentage(token.priceChangePercent24h))} | $${escapeHtml(formatPrice(token.price))} | MC: $${escapeHtml(formatLargeNumber(token.marketCap))}\n`;
   });
 
   message += `\n🕐 <i>Updated: just now</i>`;
