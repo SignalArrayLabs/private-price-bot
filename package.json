@@ -12,6 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "typecheck": "tsc --noEmit",
     "migrate": "tsx src/db/migrate.ts",
     "deploy": "echo 'SSH to Hetzner: ssh root@116.203.227.198 then run: cd /root/bots/private-price-bot && git pull && npm install && pm2 restart private-price-bot'"
   },

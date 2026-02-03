@@ -151,7 +151,7 @@ async function runAlertJob(bot: Bot): Promise<void> {
 
 async function runWatchlistJob(): Promise<void> {
   const startTime = Date.now();
-  let processed = 0;
+  const processed = 0;
 
   try {
     // In a full implementation, this would:

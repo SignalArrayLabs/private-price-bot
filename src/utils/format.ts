@@ -2,7 +2,7 @@ import type { PriceData, ContractSecurity, DeployerInfo, Alert, Call, Leaderboar
 
 // Escape special characters for Telegram MarkdownV2
 export function escapeMarkdownV2(text: string): string {
-  return text.replace(/[_*\[\]()~`>#+\-=|{}.!\\]/g, '\\$&');
+  return text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, '\\$&');
 }
 
 // Format number with appropriate precision
