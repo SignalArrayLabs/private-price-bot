@@ -1,5 +1,8 @@
 # Claude Operating Contract (Repo)
 
+## CORE IDENTITY
+This is a privacy-first Telegram crypto bot. The #1 USP is that it NEVER reads group messages — it only responds to explicit commands and mentions. Every feature, error message, and architectural decision must protect this guarantee. No logging of message content, no free-text storage, no admin permissions required.
+
 ## Authority
 - GitHub is the canonical source of truth.
 - Local MacBook is the authoring + execution environment (tests run here).

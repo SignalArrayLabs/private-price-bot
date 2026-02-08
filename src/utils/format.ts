@@ -450,7 +450,9 @@ It only responds to direct commands and mentions.</i>`;
 
 // Help card
 export function formatHelpCard(isAdmin = false): string {
-  let message = `<b>Bot Commands</b>
+  let message = `🔒 <i>Privacy-first: this bot never reads your group messages. Commands only.</i>
+
+<b>Bot Commands</b>
 
 <b>Price Commands:</b>
 /p &lt;symbol|address&gt; - Quick price lookup
@@ -706,17 +708,19 @@ export function formatLosersCard(tokens: MoverToken[], source?: string): string 
 
 // Access denied message
 export function formatAccessDenied(price: number, paymentLink?: string): string {
-  let message = `<b>Access Required</b>\n\n`;
-  message += `This bot requires a subscription ($${price.toFixed(2)}) to use.\n\n`;
+  let message = `<b>🔒 Private Price Bot</b>\n\n`;
+  message += `A privacy-first crypto bot — we never read your group messages, never require admin permissions. Commands only.\n\n`;
+  message += `<b>Access Required</b>\n`;
+  message += `This bot requires a subscription to use.\n`;
 
   if (paymentLink) {
-    message += `Click the link below to get access:\n`;
+    message += `\nClick the link below to get access:\n`;
     message += `<a href="${escapeHtml(paymentLink)}">Get Access Now</a>\n\n`;
   } else {
     message += `Contact the bot administrator to get access.\n\n`;
   }
 
-  message += `<i>Once authorized, you'll have full access to all bot features.</i>`;
+  message += `<i>Once authorized, you'll have full access to all features.</i>`;
 
   return message;
 }
