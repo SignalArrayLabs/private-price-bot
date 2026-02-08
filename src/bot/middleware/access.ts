@@ -18,6 +18,7 @@ const ADMIN_COMMANDS = new Set([
   'users',
   'checkuser',
   'payments',
+  'selftest',
 ]);
 
 /**
@@ -70,12 +71,13 @@ export async function accessMiddleware(ctx: Context, next: NextFunction): Promis
     return;
   }
 
-  // For all other commands, check authorization
-  if (isCommand || callbackData) {
+  // For all other interactions (commands, callbacks, button presses, mentions), check authorization
+  // Using `text` instead of `isCommand` ensures hears handlers and mentions are also protected
+  if (text || callbackData) {
     const authorized = isUserAuthorized(userId);
 
     if (!authorized) {
-      logger.info({ userId, command: commandName || callbackData }, 'Unauthorized user attempted to use bot');
+      logger.info({ userId, interaction: commandName || callbackData || 'button/mention' }, 'Unauthorized user attempted to use bot');
       await ctx.reply(formatAccessDenied(config.subscriptionPrice), { parse_mode: 'HTML' });
       return;
     }

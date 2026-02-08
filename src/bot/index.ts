@@ -26,6 +26,7 @@ import { handleGainers, handleLosers } from './commands/movers.js';
 
 // Admin command handlers
 import { handleApprove, handleRevoke, handleListUsers, handleCheckUser, handlePayments } from './commands/admin.js';
+import { handleSelftest } from './commands/selftest.js';
 
 // Callback handler
 import { handleCallback } from './handlers/callbacks.js';
@@ -84,6 +85,7 @@ export function createBot(): Bot {
   bot.command('users', handleListUsers);
   bot.command('checkuser', handleCheckUser);
   bot.command('payments', handlePayments);
+  bot.command('selftest', handleSelftest);
 
   // Handle callback queries (inline keyboard buttons)
   bot.on('callback_query:data', handleCallback);
