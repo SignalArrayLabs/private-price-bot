@@ -263,10 +263,6 @@ export function formatCallCard(call: Call, currentPrice?: number): string {
     message += `${multipleEmoji} <b>Current:</b> $${escapeHtml(formatPrice(currentPrice))} (${multiple.toFixed(2)}x)\n`;
   }
 
-  if (call.notes) {
-    message += `📝 <b>Notes:</b> ${escapeHtml(call.notes)}\n`;
-  }
-
   message += `\n🕐 <i>${escapeHtml(formatTimeAgo(call.callTime))}</i>`;
 
   return message;
@@ -483,7 +479,7 @@ export function formatHelpCard(isAdmin = false): string {
 /alert remove &lt;id&gt; - Remove alert
 
 <b>Calls &amp; Leaderboard:</b>
-/call &lt;symbol&gt; [price] [notes]
+/call &lt;symbol&gt; [price]
 /calls - Recent calls
 /lb - Leaderboard
 

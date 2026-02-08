@@ -29,8 +29,8 @@ export async function handleCall(ctx: Context): Promise<void> {
 
   if (args.length === 0) {
     await ctx.reply(
-      '<b>Usage:</b>\n/call &lt;symbol|address&gt; [entry_price] [notes]\n\n' +
-      '<b>Examples:</b>\n/call PEPE\n/call BTC 67000 Looking bullish',
+      '<b>Usage:</b>\n/call &lt;symbol|address&gt; [entry_price]\n\n' +
+      '<b>Examples:</b>\n/call PEPE\n/call BTC 67000',
       { parse_mode: 'HTML' }
     );
     return;
@@ -75,9 +75,7 @@ export async function handleCall(ctx: Context): Promise<void> {
     group.id,
     user.id,
     parsed.symbolOrAddress,
-    entryPrice,
-    undefined,
-    parsed.notes
+    entryPrice
   );
 
   // Get current price for display

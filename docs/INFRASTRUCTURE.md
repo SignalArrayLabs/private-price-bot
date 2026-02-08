@@ -37,6 +37,23 @@ ssh root@116.203.227.198
 
 ---
 
+## BotFather Configuration
+
+**REQUIRED: Enable privacy mode via BotFather.**
+
+```
+1. Open @BotFather in Telegram
+2. Send /mybots
+3. Select your bot
+4. Bot Settings → Group Privacy → Turn ON
+```
+
+This ensures the bot **cannot see group messages** — only commands directed at it. This is non-negotiable and core to our privacy-first USP.
+
+Without privacy mode enabled, Telegram sends ALL group messages to the bot, which violates our privacy guarantees.
+
+---
+
 ## Development Pipeline
 
 ```

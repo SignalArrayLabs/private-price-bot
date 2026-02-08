@@ -370,16 +370,15 @@ export function createCall(
   userId: number,
   tokenRef: string,
   callPrice: number,
-  chain?: SupportedChain,
-  notes?: string
+  chain?: SupportedChain
 ): Call {
   const database = getDb();
   const result = database
     .prepare(`
-      INSERT INTO calls (group_id, user_id, token_ref, chain, call_price, notes)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO calls (group_id, user_id, token_ref, chain, call_price)
+      VALUES (?, ?, ?, ?, ?)
     `)
-    .run(groupId, userId, tokenRef.toLowerCase(), chain ?? null, callPrice, notes ?? null);
+    .run(groupId, userId, tokenRef.toLowerCase(), chain ?? null, callPrice);
 
   const user = database
     .prepare('SELECT username FROM users WHERE id = ?')
@@ -394,7 +393,6 @@ export function createCall(
     chain: chain ?? null,
     callPrice,
     callTime: new Date(),
-    notes,
   };
 }
 
@@ -417,7 +415,6 @@ export function getRecentCalls(groupId: number, limit = 10): Call[] {
       chain: string | null;
       call_price: number;
       call_time: string;
-      notes: string | null;
       username: string | null;
     }>;
 
@@ -430,7 +427,6 @@ export function getRecentCalls(groupId: number, limit = 10): Call[] {
     chain: row.chain as SupportedChain | null,
     callPrice: row.call_price,
     callTime: new Date(row.call_time),
-    notes: row.notes ?? undefined,
   }));
 }
 

@@ -75,28 +75,22 @@ export async function getPrice(
 
   // Try providers in order
   const providerOrder = getProviderOrder();
-  console.log('[DEBUG] Provider order:', providerOrder, 'for symbol:', symbolOrAddress);
 
   for (const providerName of providerOrder) {
     const provider = getProvider(providerName);
     if (!provider) {
-      console.log('[DEBUG] Provider not found:', providerName);
       continue;
     }
 
     // Skip if provider is unhealthy
-    console.log('[DEBUG] Checking health of:', providerName);
     const healthy = await provider.isHealthy();
-    console.log('[DEBUG] Provider', providerName, 'healthy:', healthy);
     if (!healthy) {
       logger.debug({ provider: providerName }, 'Skipping unhealthy provider');
       continue;
     }
 
     try {
-      console.log('[DEBUG] Calling getPrice on:', providerName);
       const data = await provider.getPrice(symbolOrAddress, chain);
-      console.log('[DEBUG] Result from', providerName, ':', data ? 'found' : 'null');
       if (data) {
         // Cache the result
         const ttl = config.cacheTtlPrice;

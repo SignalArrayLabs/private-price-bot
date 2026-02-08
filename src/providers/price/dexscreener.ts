@@ -186,11 +186,6 @@ export class DexScreenerProvider extends BasePriceProvider {
     // Build DexScreener URL for the reference pair
     const dexScreenerUrl = `https://dexscreener.com/${refPair.chainId}/${refPair.pairAddress}`;
 
-    // Debug logging
-    console.log('[DEBUG] Selected pair:', refPair.baseToken.symbol, 'on', refPair.chainId,
-                'liquidity:', refPair.liquidity?.usd, 'volume:', refPair.volume?.h24,
-                'total aggregated volume:', totalVolume, 'from', topPairs.length, 'pairs');
-
     return {
       symbol: refPair.baseToken.symbol.toUpperCase(),
       name: refPair.baseToken.name,

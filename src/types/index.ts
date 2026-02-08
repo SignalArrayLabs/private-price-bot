@@ -95,7 +95,6 @@ export interface Call {
   chain: SupportedChain | null;
   callPrice: number;
   callTime: Date;
-  notes?: string;
   currentPrice?: number;
   multiple?: number;
 }
