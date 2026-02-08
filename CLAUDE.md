@@ -52,3 +52,8 @@
 - PLANNING.md = canonical project context.
 - TESTING.md = test strategy.
 - CHANGELOG.md = version history.
+
+## Production Integrity Invariants
+
+### INVARIANT 6: NO SERVER EXPLORATION
+If an expected production path does not exist, STOP and report. Do NOT search the server for other directories, do NOT interact with other projects, do NOT assume a different path is this project. Exit SSH and tell me the path is wrong. I decide the correct path.
