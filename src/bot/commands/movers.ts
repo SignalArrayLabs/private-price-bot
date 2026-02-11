@@ -22,8 +22,13 @@ export async function handleGainers(ctx: Context): Promise<void> {
       tokens = await getOnChainGainers(parsed.limit);
       source = 'DexScreener (On-chain)';
     } else {
+      // Try CoinGecko first, fallback to OnChain if empty
       tokens = await getTopGainers(parsed.limit);
       source = 'CoinGecko (Majors)';
+      if (tokens.length === 0) {
+        tokens = await getOnChainGainers(parsed.limit);
+        source = 'DexScreener (On-chain) [CG degraded]';
+      }
     }
 
     if (tokens.length === 0) {
@@ -84,8 +89,13 @@ export async function handleLosers(ctx: Context): Promise<void> {
       tokens = await getOnChainLosers(parsed.limit);
       source = 'DexScreener (On-chain)';
     } else {
+      // Try CoinGecko first, fallback to OnChain if empty
       tokens = await getTopLosers(parsed.limit);
       source = 'CoinGecko (Majors)';
+      if (tokens.length === 0) {
+        tokens = await getOnChainLosers(parsed.limit);
+        source = 'DexScreener (On-chain) [CG degraded]';
+      }
     }
 
     if (tokens.length === 0) {

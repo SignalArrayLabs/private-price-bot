@@ -105,14 +105,14 @@ export async function handleSelftest(ctx: Context): Promise<void> {
 
   await ctx.reply('<b>Running self-test...</b>\n\nTesting all modules with real API calls. This may take up to 30 seconds.', { parse_mode: 'HTML' });
 
-  // Define all tests
+  // Define all tests - CG movers marked as degraded, OnChain is primary
   const tests = [
     { name: 'Price', fn: () => getPrice('BTC') },
     { name: 'ATH', fn: () => getATHData('BTC') },
-    { name: 'Gainers (CG)', fn: () => getTopGainers(3) },
-    { name: 'Losers (CG)', fn: () => getTopLosers(3) },
-    { name: 'Gainers (OnChain)', fn: () => getOnChainGainers(3) },
-    { name: 'Losers (OnChain)', fn: () => getOnChainLosers(3) },
+    { name: 'Gainers (CG) [degraded]', fn: () => getTopGainers(3) },
+    { name: 'Losers (CG) [degraded]', fn: () => getTopLosers(3) },
+    { name: 'Gainers (OnChain) [primary]', fn: () => getOnChainGainers(3) },
+    { name: 'Losers (OnChain) [primary]', fn: () => getOnChainLosers(3) },
     { name: 'Gas', fn: () => getGasPrice('ethereum') },
     { name: 'Fear & Greed', fn: () => getFearGreedIndex() },
     { name: 'Trending', fn: () => getTrendingTokens() },
