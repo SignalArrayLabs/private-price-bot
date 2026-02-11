@@ -5,6 +5,7 @@ import {
   getDeployerInfo,
   checkWebsite,
   checkTwitter,
+  resolveSymbolToAddress,
 } from '../../providers/security/index.js';
 import {
   formatSecurityCard,
@@ -17,6 +18,7 @@ import {
 } from '../../utils/format.js';
 import { parseScanArgs, isAddress, urlSchema, twitterHandleSchema } from '../../utils/validation.js';
 import { getMentionArgs, isMentionCommand } from '../middleware/mention.js';
+import { logger } from '../../utils/logger.js';
 
 export async function handleScan(ctx: Context): Promise<void> {
   // Get args from command or mention
@@ -30,21 +32,13 @@ export async function handleScan(ctx: Context): Promise<void> {
 
   if (args.length === 0) {
     await ctx.reply(
-      '<b>Usage:</b>\n/scan &lt;address&gt; [chain]\n\n' +
+      '<b>Usage:</b>\n/scan &lt;symbol or address&gt; [chain]\n\n' +
       '<b>Chains:</b> ethereum, bsc, polygon, solana\n' +
-      '<i>Chain is auto-detected from address format</i>\n\n' +
+      '<i>Chain is auto-detected from address or symbol</i>\n\n' +
       '<b>Examples:</b>\n' +
-      '/scan 0x... ethereum (EVM)\n' +
-      '/scan 7xKXtg... (Solana, auto-detected)',
-      { parse_mode: 'HTML' }
-    );
-    return;
-  }
-
-  const parsed = parseScanArgs(args);
-  if (!parsed) {
-    await ctx.reply(
-      formatError('Invalid address format. Must be a valid EVM (0x...) or Solana (base58) address.'),
+      '/scan PENGU (by ticker)\n' +
+      '/scan 0x... ethereum (EVM address)\n' +
+      '/scan 7xKXtg... (Solana address)',
       { parse_mode: 'HTML' }
     );
     return;
@@ -53,21 +47,61 @@ export async function handleScan(ctx: Context): Promise<void> {
   // Show typing indicator
   await ctx.replyWithChatAction('typing');
 
+  // Check if first arg is an address or a symbol
+  const firstArg = args[0];
+  let address: string;
+  let chain: 'ethereum' | 'bsc' | 'polygon' | 'solana';
+
+  if (isAddress(firstArg)) {
+    // It's an address - use existing logic
+    const parsed = parseScanArgs(args);
+    if (!parsed) {
+      await ctx.reply(
+        formatError('Invalid address format. Must be a valid EVM (0x...) or Solana (base58) address.'),
+        { parse_mode: 'HTML' }
+      );
+      return;
+    }
+    address = parsed.address;
+    chain = parsed.chain;
+  } else {
+    // It's a symbol - resolve to address
+    logger.info({ symbol: firstArg }, '[SCAN] Resolving symbol to address');
+
+    const resolved = await resolveSymbolToAddress(firstArg);
+    if (!resolved) {
+      await ctx.reply(
+        formatError(`Token "${firstArg.toUpperCase()}" not found. Try using the contract address instead.`),
+        { parse_mode: 'HTML' }
+      );
+      return;
+    }
+
+    address = resolved.address;
+    chain = resolved.chain;
+
+    // Inform user about the resolution
+    await ctx.reply(
+      `🔍 <b>Resolved:</b> ${resolved.symbol} → <code>${address.slice(0, 8)}...${address.slice(-6)}</code> on ${chain}\n\n<i>Scanning...</i>`,
+      { parse_mode: 'HTML' }
+    );
+  }
+
   try {
-    const security = await getContractSecurity(parsed.address, parsed.chain);
+    const security = await getContractSecurity(address, chain);
 
     if (!security) {
       // Show partial scan instead of hard error
       await ctx.reply(
-        formatPartialScan(parsed.address, parsed.chain),
+        formatPartialScan(address, chain),
         { parse_mode: 'HTML' }
       );
       return;
     }
 
     const keyboard = new InlineKeyboard()
-      .text('📊 Price', `price:${parsed.address}:${parsed.chain}`)
-      .text('👤 Deployer', `deployer:${security.deployerAddress ?? parsed.address}:${parsed.chain}`);
+      .text('📊 Price', `price:${address}:${chain}`)
+      .text('👤 Deployer', `deployer:${security.deployerAddress ?? address}:${chain}`);
 
     await ctx.reply(formatSecurityCard(security), {
       parse_mode: 'HTML',

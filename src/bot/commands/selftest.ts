@@ -6,7 +6,7 @@ import { getOnChainGainers, getOnChainLosers } from '../../providers/movers/dexs
 import { getGasPrice } from '../../providers/gas/etherscan.js';
 import { getFearGreedIndex } from '../../providers/sentiment/alternativeme.js';
 import { getTrendingTokens } from '../../providers/trending/coingecko.js';
-import { getContractSecurity } from '../../providers/security/index.js';
+import { getContractSecurity, resolveSymbolToAddress } from '../../providers/security/index.js';
 
 // Well-known contract for testing: WETH on Ethereum
 const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
@@ -113,6 +113,7 @@ export async function handleSelftest(ctx: Context): Promise<void> {
     { name: 'Losers (CG) [degraded]', fn: () => getTopLosers(3) },
     { name: 'Gainers (OnChain) [primary]', fn: () => getOnChainGainers(3) },
     { name: 'Losers (OnChain) [primary]', fn: () => getOnChainLosers(3) },
+    { name: 'Symbol Resolve', fn: () => resolveSymbolToAddress('PENGU') },
     { name: 'Gas', fn: () => getGasPrice('ethereum') },
     { name: 'Fear & Greed', fn: () => getFearGreedIndex() },
     { name: 'Trending', fn: () => getTrendingTokens() },

@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { EtherscanProvider } from './etherscan.js';
 import { SolscanProvider } from './solscan.js';
 import { WebsiteChecker } from './website.js';
@@ -5,6 +6,141 @@ import type { ContractSecurity, DeployerInfo, WebsiteSimilarity, TwitterCheck } 
 import type { SupportedChain } from '../../config/index.js';
 import { logger } from '../../utils/logger.js';
 import { config } from '../../config/index.js';
+
+// SHA256 for API response verification
+function sha256(data: string): string {
+  return createHash('sha256').update(data).digest('hex').slice(0, 16);
+}
+
+// DexScreener response types for symbol resolution
+interface DexScreenerPair {
+  chainId: string;
+  baseToken: {
+    address: string;
+    symbol: string;
+    name: string;
+  };
+  volume?: { h24: number };
+  liquidity?: { usd: number };
+}
+
+interface DexScreenerSearchResponse {
+  pairs: DexScreenerPair[] | null;
+}
+
+// Map DexScreener chainId to our SupportedChain
+const DEXSCREENER_TO_CHAIN: Record<string, SupportedChain> = {
+  ethereum: 'ethereum',
+  bsc: 'bsc',
+  polygon: 'polygon',
+  solana: 'solana',
+  arbitrum: 'ethereum', // fallback to ethereum for security scan
+  base: 'ethereum',
+  avalanche: 'ethereum',
+};
+
+export interface ResolvedToken {
+  address: string;
+  chain: SupportedChain;
+  symbol: string;
+  name: string;
+}
+
+/**
+ * Resolve a ticker symbol to contract address using DexScreener
+ * Returns the highest-volume token matching the symbol
+ */
+export async function resolveSymbolToAddress(symbol: string): Promise<ResolvedToken | null> {
+  logger.info({ symbol }, '[SYMBOL-RESOLVE] Starting resolution');
+
+  try {
+    const url = `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      logger.warn({ status: response.status }, '[SYMBOL-RESOLVE] API returned non-OK');
+      return null;
+    }
+
+    const rawBody = await response.text();
+    const bodyHash = sha256(rawBody);
+    const serverDate = response.headers.get('date') || 'no-date';
+
+    logger.info({
+      symbol,
+      responseSize: rawBody.length,
+      bodyHash,
+      serverDate,
+    }, '[SYMBOL-RESOLVE] API response received');
+
+    const data = JSON.parse(rawBody) as DexScreenerSearchResponse;
+
+    if (!data.pairs || data.pairs.length === 0) {
+      logger.warn({ symbol }, '[SYMBOL-RESOLVE] No pairs found');
+      return null;
+    }
+
+    // Filter for exact symbol matches (case-insensitive)
+    const normalizedSymbol = symbol.toUpperCase();
+    const exactMatches = data.pairs.filter(
+      p => p.baseToken.symbol.toUpperCase() === normalizedSymbol
+    );
+
+    const candidates = exactMatches.length > 0 ? exactMatches : data.pairs;
+
+    // Pick the token with highest 24h volume (avoids fake tokens with inflated liquidity)
+    let bestPair: DexScreenerPair | null = null;
+    let maxVolume = 0;
+
+    for (const pair of candidates) {
+      const volume = pair.volume?.h24 ?? 0;
+      if (volume > maxVolume) {
+        maxVolume = volume;
+        bestPair = pair;
+      }
+    }
+
+    if (!bestPair) {
+      logger.warn({ symbol }, '[SYMBOL-RESOLVE] No valid pair found');
+      return null;
+    }
+
+    // Map chainId to our supported chain type
+    const chain = DEXSCREENER_TO_CHAIN[bestPair.chainId] || 'ethereum';
+
+    const result: ResolvedToken = {
+      address: bestPair.baseToken.address,
+      chain,
+      symbol: bestPair.baseToken.symbol,
+      name: bestPair.baseToken.name,
+    };
+
+    logger.info({
+      inputSymbol: symbol,
+      resolvedAddress: result.address,
+      resolvedChain: result.chain,
+      resolvedName: result.name,
+      volume24h: maxVolume,
+    }, '[SYMBOL-RESOLVE] Resolution successful');
+
+    return result;
+  } catch (error) {
+    logger.error({
+      symbol,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, '[SYMBOL-RESOLVE] Resolution failed');
+    return null;
+  }
+}
 
 // Provider instances
 let etherscanProvider: EtherscanProvider | null = null;
