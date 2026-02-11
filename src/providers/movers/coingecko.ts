@@ -25,8 +25,10 @@ const moversCache = {
 const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 async function fetchMarketData(order: 'price_change_percentage_24h_desc' | 'price_change_percentage_24h_asc', limit: number): Promise<MoverToken[]> {
+  logger.info({ order, limit }, '[CG-MOVERS] fetchMarketData called');
   try {
     const baseUrl = config.coingeckoBaseUrl;
+    logger.info({ baseUrl }, '[CG-MOVERS] Using base URL');
     // Filter by market cap to avoid micro-cap coins that can have huge swings
     const url = `${baseUrl}/coins/markets?vs_currency=usd&order=${order}&per_page=${limit}&page=1&sparkline=false&price_change_percentage=24h`;
 
@@ -49,8 +51,9 @@ async function fetchMarketData(order: 'price_change_percentage_24h_desc' | 'pric
 
     clearTimeout(timeoutId);
 
+    logger.info({ status: response.status, ok: response.ok }, '[CG-MOVERS] Got response');
     if (!response.ok) {
-      logger.warn({ status: response.status }, 'Movers API returned non-OK status');
+      logger.warn({ status: response.status }, '[CG-MOVERS] Non-OK status');
       return [];
     }
 
@@ -70,8 +73,10 @@ async function fetchMarketData(order: 'price_change_percentage_24h_desc' | 'pric
     }, 'API call completed');
 
     const data = JSON.parse(rawBody) as CoinGeckoMarketResponse[];
+    logger.info({ parsedCount: data.length, isArray: Array.isArray(data) }, '[CG-MOVERS] Parsed data');
 
     if (!Array.isArray(data) || data.length === 0) {
+      logger.warn('[CG-MOVERS] Empty or invalid data array');
       return [];
     }
 
@@ -85,16 +90,19 @@ async function fetchMarketData(order: 'price_change_percentage_24h_desc' | 'pric
       volume24h: coin.total_volume,
     }));
   } catch (error) {
-    logger.warn({
+    logger.error({
       error: error instanceof Error ? error.message : 'Unknown error',
-    }, 'Failed to fetch market data');
+      stack: error instanceof Error ? error.stack : undefined,
+    }, '[CG-MOVERS] FETCH FAILED');
     return [];
   }
 }
 
 export async function getTopGainers(limit: number = 5): Promise<MoverToken[]> {
+  logger.info({ limit, cacheExpiry: moversCache.gainers.expiry, now: Date.now() }, '[CG-MOVERS] getTopGainers called');
   // Check cache
   if (moversCache.gainers.expiry > Date.now() && moversCache.gainers.data.length >= limit) {
+    logger.info({ cached: true }, '[CG-MOVERS] Returning cached gainers');
     return moversCache.gainers.data.slice(0, limit);
   }
 
