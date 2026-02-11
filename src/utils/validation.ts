@@ -141,6 +141,7 @@ export function parseAlertRemoveArgs(args: string[]): AlertRemoveArgs | null {
 export interface CallArgs {
   symbolOrAddress: string;
   entryPrice?: number;
+  notes?: string;
 }
 
 export function parseCallArgs(args: string[]): CallArgs | null {
@@ -156,6 +157,7 @@ export function parseCallArgs(args: string[]): CallArgs | null {
   }
 
   let entryPrice: number | undefined;
+  let notesStartIndex = 1;
 
   if (args.length > 1) {
     const priceStr = args[1].replace(/[$,]/g, '');
@@ -163,12 +165,20 @@ export function parseCallArgs(args: string[]): CallArgs | null {
 
     if (!isNaN(price) && price > 0) {
       entryPrice = price;
+      notesStartIndex = 2;
     }
+  }
+
+  // Collect remaining args as notes
+  let notes: string | undefined;
+  if (args.length > notesStartIndex) {
+    notes = args.slice(notesStartIndex).join(' ');
   }
 
   return {
     symbolOrAddress: validSymbolOrAddress.data,
     entryPrice,
+    ...(notes && { notes }),
   };
 }
 

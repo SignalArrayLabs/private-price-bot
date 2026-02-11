@@ -210,6 +210,7 @@ describe('Validation Utils', () => {
       expect(result).toEqual({
         address: '0x1234567890abcdef1234567890abcdef12345678',
         chain: 'ethereum',
+        chainType: 'evm',
       });
     });
 
@@ -218,6 +219,7 @@ describe('Validation Utils', () => {
       expect(result).toEqual({
         address: '0x1234567890abcdef1234567890abcdef12345678',
         chain: 'bsc',
+        chainType: 'evm',
       });
     });
 

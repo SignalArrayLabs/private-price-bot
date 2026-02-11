@@ -16,6 +16,7 @@ const ADMIN_COMMANDS = new Set([
   'approve',
   'revoke',
   'users',
+  'listusers',
   'checkuser',
   'payments',
   'selftest',

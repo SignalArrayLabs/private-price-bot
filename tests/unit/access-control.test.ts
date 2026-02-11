@@ -256,7 +256,7 @@ describe('Access Control Database Operations', () => {
 
 describe('Access Control Logic', () => {
   const PUBLIC_COMMANDS = new Set(['start', 'help', 'privacy']);
-  const ADMIN_COMMANDS = new Set(['approve', 'revoke', 'users', 'checkuser', 'payments']);
+  const ADMIN_COMMANDS = new Set(['approve', 'revoke', 'users', 'listusers', 'checkuser', 'payments']);
 
   function isPublicCommand(command: string): boolean {
     return PUBLIC_COMMANDS.has(command);

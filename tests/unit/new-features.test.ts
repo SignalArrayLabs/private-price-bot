@@ -137,27 +137,27 @@ describe('New Feature Validation', () => {
   describe('parseMoversArgs', () => {
     it('returns default limit with no args', () => {
       const result = parseMoversArgs([]);
-      expect(result).toEqual({ limit: 5 });
+      expect(result).toEqual({ limit: 5, category: 'majors' });
     });
 
     it('parses valid limit', () => {
       const result = parseMoversArgs(['3']);
-      expect(result).toEqual({ limit: 3 });
+      expect(result).toEqual({ limit: 3, category: 'majors' });
     });
 
     it('caps limit at 10', () => {
       const result = parseMoversArgs(['15']);
-      expect(result).toEqual({ limit: 10 });
+      expect(result).toEqual({ limit: 10, category: 'majors' });
     });
 
     it('returns default for invalid limit', () => {
       const result = parseMoversArgs(['abc']);
-      expect(result).toEqual({ limit: 5 });
+      expect(result).toEqual({ limit: 5, category: 'majors' });
     });
 
     it('returns default for negative limit', () => {
       const result = parseMoversArgs(['-5']);
-      expect(result).toEqual({ limit: 5 });
+      expect(result).toEqual({ limit: 5, category: 'majors' });
     });
   });
 });
