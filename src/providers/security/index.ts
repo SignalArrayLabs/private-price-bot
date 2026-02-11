@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { EtherscanProvider } from './etherscan.js';
-import { SolscanProvider } from './solscan.js';
+import { RugCheckProvider } from './rugcheck.js';
 import { WebsiteChecker } from './website.js';
 import type { ContractSecurity, DeployerInfo, WebsiteSimilarity, TwitterCheck } from '../../types/index.js';
 import type { SupportedChain } from '../../config/index.js';
@@ -144,7 +144,7 @@ export async function resolveSymbolToAddress(symbol: string): Promise<ResolvedTo
 
 // Provider instances
 let etherscanProvider: EtherscanProvider | null = null;
-let solscanProvider: SolscanProvider | null = null;
+let rugcheckProvider: RugCheckProvider | null = null;
 let websiteChecker: WebsiteChecker | null = null;
 
 // In-memory cache for security data
@@ -158,11 +158,11 @@ function getEtherscanProvider(): EtherscanProvider {
   return etherscanProvider;
 }
 
-function getSolscanProvider(): SolscanProvider {
-  if (!solscanProvider) {
-    solscanProvider = new SolscanProvider();
+function getRugCheckProvider(): RugCheckProvider {
+  if (!rugcheckProvider) {
+    rugcheckProvider = new RugCheckProvider();
   }
-  return solscanProvider;
+  return rugcheckProvider;
 }
 
 function getWebsiteChecker(): WebsiteChecker {
@@ -197,7 +197,8 @@ export async function getContractSecurity(
 
     // Route to appropriate provider based on chain
     if (chain === 'solana') {
-      const provider = getSolscanProvider();
+      // Use RugCheck for Solana (Solscan API deprecated)
+      const provider = getRugCheckProvider();
       data = await provider.getContractSecurity(address);
     } else {
       // EVM chains (ethereum, bsc, polygon)
@@ -251,8 +252,9 @@ export async function getDeployerInfo(
 
     // Route to appropriate provider based on chain
     if (chain === 'solana') {
-      const provider = getSolscanProvider();
-      data = await provider.getDeployerInfo(address);
+      // RugCheck doesn't provide deployer history for Solana
+      logger.debug({ address }, 'Deployer info not available for Solana via RugCheck');
+      return null;
     } else {
       // EVM chains (ethereum, bsc, polygon)
       const provider = getEtherscanProvider();
@@ -320,4 +322,4 @@ export function clearSecurityCache(): void {
   deployerCache.clear();
 }
 
-export { EtherscanProvider, WebsiteChecker };
+export { EtherscanProvider, RugCheckProvider, WebsiteChecker };
