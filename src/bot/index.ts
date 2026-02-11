@@ -12,7 +12,7 @@ import { accessMiddleware } from './middleware/access.js';
 import { handleStart, handleHelp, handlePrivacy, handleStatus, handleWhoami, setCachedBotUsername } from './commands/general.js';
 import { handlePrice, handleDefault, handleChart } from './commands/price.js';
 import { handleSetDefault, handleWatch } from './commands/config.js';
-import { handleAlert } from './commands/alerts.js';
+import { handleAlert, handleAlertList } from './commands/alerts.js';
 import { handleCall, handleCalls, handleLeaderboard } from './commands/calls.js';
 import { handleScan, handleDeployer, handleWebsiteCheck, handleTwitterCheck } from './commands/security.js';
 
@@ -109,11 +109,11 @@ export function createBot(): Bot {
   });
 
   bot.hears('🔔 Alerts', async (ctx) => {
-    await ctx.reply('Use: /alert list to see alerts\n/alert add <symbol> <above|below> <price>', { parse_mode: 'HTML' });
+    await handleAlertList(ctx);
   });
 
   bot.hears('🏆 Board', async (ctx) => {
-    await ctx.reply('Use: /lb to see the leaderboard', { parse_mode: 'HTML' });
+    await handleLeaderboard(ctx);
   });
 
   // Handle mention-triggered commands

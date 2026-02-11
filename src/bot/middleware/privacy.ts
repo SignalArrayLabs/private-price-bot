@@ -1,13 +1,30 @@
 import type { Context, NextFunction } from 'grammy';
-import { logCommand } from '../../utils/logger.js';
+import { logCommand, logger } from '../../utils/logger.js';
+
+// Counter for dropped group messages (privacy metric)
+let droppedGroupMessageCount = 0;
+
+export function getDroppedGroupMessageCount(): number {
+  return droppedGroupMessageCount;
+}
 
 /**
  * Privacy middleware ensures:
- * 1. We only process commands and mentions
- * 2. We NEVER log message content
- * 3. We only log command type and metadata
+ * 1. We ONLY process messages in private chats
+ * 2. We NEVER read, log, or process group messages
+ * 3. We NEVER log message content
+ * 4. We only log command type and metadata
  */
 export async function privacyMiddleware(ctx: Context, next: NextFunction): Promise<void> {
+  // CRITICAL PRIVACY GUARD: Block ALL non-private chat messages
+  const chatType = ctx.chat?.type;
+  if (chatType && chatType !== 'private') {
+    // Increment counter but DO NOT log message content
+    droppedGroupMessageCount++;
+    logger.debug({ chatType, dropped: true }, 'Dropped non-private message');
+    return; // Do not process, do not call handlers, do not log content
+  }
+
   // Extract safe metadata for logging (NEVER the message content)
   const chatId = ctx.chat?.id;
   const userId = ctx.from?.id;

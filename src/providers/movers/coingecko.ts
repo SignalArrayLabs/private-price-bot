@@ -1,6 +1,11 @@
+import { createHash } from 'crypto';
 import { logger } from '../../utils/logger.js';
 import { config } from '../../config/index.js';
 import type { MoverToken } from '../../types/index.js';
+
+function sha256(data: string): string {
+  return createHash('sha256').update(data).digest('hex').slice(0, 16);
+}
 
 interface CoinGeckoMarketResponse {
   id: string;
@@ -49,7 +54,22 @@ async function fetchMarketData(order: 'price_change_percentage_24h_desc' | 'pric
       return [];
     }
 
-    const data = await response.json() as CoinGeckoMarketResponse[];
+    const rawBody = await response.text();
+    const responseSize = rawBody.length;
+    const bodyHash = sha256(rawBody);
+    const serverDate = response.headers.get('date') || 'no-date';
+
+    logger.info({
+      provider: 'coingecko',
+      endpoint: url.split('?')[0],
+      order,
+      responseSize,
+      bodyHash,
+      serverDate,
+      timestamp: new Date().toISOString(),
+    }, 'API call completed');
+
+    const data = JSON.parse(rawBody) as CoinGeckoMarketResponse[];
 
     if (!Array.isArray(data) || data.length === 0) {
       return [];

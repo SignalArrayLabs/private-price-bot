@@ -519,9 +519,11 @@ async function handleNavCallback(ctx: Context, params: string[]): Promise<void> 
       await ctx.reply('Use: /scan &lt;address&gt; [chain]\nExample: /scan 0x...', { parse_mode: 'HTML' });
       break;
     case 'alerts':
+      // Will be handled by the calling context - show alert list
       await ctx.reply('Use: /alert list to see alerts\n/alert add &lt;symbol&gt; &lt;above|below&gt; &lt;price&gt;', { parse_mode: 'HTML' });
       break;
     case 'leaderboard':
+      // Will be handled by the calling context - show leaderboard
       await ctx.reply('Use: /lb to see the leaderboard', { parse_mode: 'HTML' });
       break;
   }

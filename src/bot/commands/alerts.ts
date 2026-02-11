@@ -92,7 +92,7 @@ async function handleAlertAdd(ctx: Context, args: string[]): Promise<void> {
   });
 }
 
-async function handleAlertList(ctx: Context): Promise<void> {
+export async function handleAlertList(ctx: Context): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
 
