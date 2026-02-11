@@ -707,7 +707,7 @@ export function formatLosersCard(tokens: MoverToken[], source?: string): string 
 // ============ Access Control Cards ============
 
 // Access denied message
-export function formatAccessDenied(price: number, paymentLink?: string): string {
+export function formatAccessDenied(_price: number, paymentLink?: string): string {
   let message = `<b>🔒 Private Price Bot</b>\n\n`;
   message += `A privacy-first crypto bot — we never read your group messages, never require admin permissions. Commands only.\n\n`;
   message += `<b>Access Required</b>\n`;

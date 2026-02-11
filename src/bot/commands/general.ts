@@ -10,6 +10,13 @@ import { getIdentity } from '../../utils/identity.js';
 // Bot start time for uptime calculation
 const startTime = Date.now();
 
+// Cached bot info from startup
+let cachedBotUsername: string | null = null;
+
+export function setCachedBotUsername(username: string): void {
+  cachedBotUsername = username;
+}
+
 export async function handleStart(ctx: Context): Promise<void> {
   const message = `<b>👋 Welcome to Private Price Bot!</b>
 
@@ -40,6 +47,22 @@ export async function handleHelp(ctx: Context): Promise<void> {
 
 export async function handlePrivacy(ctx: Context): Promise<void> {
   await ctx.reply(formatPrivacyCard(), { parse_mode: 'HTML' });
+}
+
+export async function handleWhoami(ctx: Context): Promise<void> {
+  const identity = await getIdentity(ctx.api);
+  const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+  const fingerprint = `<b>🤖 WHOAMI Fingerprint</b>
+
+<b>Bot Username:</b> @${cachedBotUsername || identity.botUsername || 'unknown'}
+<b>Git Commit:</b> ${identity.gitCommit || 'unknown'}
+<b>Process ID:</b> ${process.pid}
+<b>Uptime:</b> ${uptimeSeconds}s
+<b>Environment:</b> ${identity.envSource || process.env.NODE_ENV || 'production'}
+<b>Timestamp:</b> ${new Date().toISOString()}`;
+
+  await ctx.reply(fingerprint, { parse_mode: 'HTML' });
 }
 
 export async function handleStatus(ctx: Context): Promise<void> {

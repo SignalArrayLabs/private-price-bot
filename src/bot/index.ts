@@ -9,7 +9,7 @@ import { mentionMiddleware, getMentionContext } from './middleware/mention.js';
 import { accessMiddleware } from './middleware/access.js';
 
 // Command handlers
-import { handleStart, handleHelp, handlePrivacy, handleStatus } from './commands/general.js';
+import { handleStart, handleHelp, handlePrivacy, handleStatus, handleWhoami, setCachedBotUsername } from './commands/general.js';
 import { handlePrice, handleDefault, handleChart } from './commands/price.js';
 import { handleSetDefault, handleWatch } from './commands/config.js';
 import { handleAlert } from './commands/alerts.js';
@@ -45,6 +45,7 @@ export function createBot(): Bot {
   bot.command('help', handleHelp);
   bot.command('privacy', handlePrivacy);
   bot.command('status', handleStatus);
+  bot.command('whoami', handleWhoami);
 
   // Price commands
   bot.command('p', handlePrice);
@@ -176,6 +177,11 @@ export async function startBot(bot: Bot): Promise<void> {
     username: me.username,
     firstName: me.first_name,
   }, 'Bot starting');
+
+  // Cache bot username for /whoami
+  if (me.username) {
+    setCachedBotUsername(me.username);
+  }
 
   // Set bot commands menu (visible in Telegram)
   await bot.api.setMyCommands([
