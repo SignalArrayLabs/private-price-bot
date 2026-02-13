@@ -16,8 +16,9 @@ Privacy-first Telegram bot providing crypto price lookups, alerts, leaderboards,
 - **Language**: TypeScript (Node.js 18+)
 - **Bot Framework**: grammY (Telegram)
 - **Database**: SQLite (better-sqlite3) - local file at `./data/bot.db`
-- **Price Providers**: CoinGecko (primary) → CoinCap → Binance (fallback chain)
-- **Security Providers**: Etherscan, BSCScan, PolygonScan
+- **Price Providers**: CoinGecko (primary) → CoinCap → Binance → DexScreener (fallback chain)
+- **Security Providers**: Etherscan, BSCScan, PolygonScan, Solscan (Solana), RugCheck
+- **Movers Providers**: DexScreener (primary/OnChain), CoinGecko (degraded fallback)
 - **Caching**: Two-tier (in-memory Map + SQLite)
 - **Scheduling**: node-cron for alert evaluation and watchlist updates
 - **Logging**: Pino with redaction (no message content logged)
@@ -102,6 +103,7 @@ A privacy-first Telegram group bot providing crypto price lookups, alerts, leade
 - Ethereum (ETH)
 - BNB Smart Chain (BSC)
 - Polygon (MATIC)
+- Solana (SOL)
 
 ---
 
@@ -555,6 +557,7 @@ interface PriceData {
 | CoinGecko | ✅ Full | ✅ Full | 10-30/min | Best coverage, primary |
 | CoinCap | ✅ Major | ❌ No | 200/min | Good fallback, no contracts |
 | Binance | ✅ Major | ❌ No | 1200/min | Fast, limited to pairs |
+| DexScreener | ✅ DEX | ✅ Full | 300/min | OnChain data, Solana support |
 
 #### Fallback Strategy
 
@@ -614,6 +617,8 @@ interface ContractSecurity {
 | Ethereum | Etherscan | api.etherscan.io/api | Optional* |
 | BSC | BSCScan | api.bscscan.com/api | Optional* |
 | Polygon | PolygonScan | api.polygonscan.com/api | Optional* |
+| Solana | Solscan | api.solscan.io | Optional* |
+| Multi-chain | RugCheck | rugcheck.xyz/api | No |
 
 *Free tier available with rate limits
 
@@ -939,6 +944,97 @@ Source: alternative.me
 🕐 Updated: just now
 ```
 
+#### /whoami - User Identity
+
+**Input:**
+```
+/whoami
+```
+
+**Output:**
+```
+👤 User Info
+
+User ID: 123456789
+Username: @yourname
+Access: approved
+```
+
+#### /selftest - Admin Self-Test (Admin Only)
+
+**Input:**
+```
+/selftest
+```
+
+**Output:**
+```
+Self-Test Results
+
+✅ Price: 15 lines (0.8s)
+✅ ATH: 12 lines (0.6s)
+✅ Gainers (CG) [degraded]: 8 lines (1.2s)
+✅ Gainers (OnChain) [primary]: 10 lines (0.9s)
+...
+
+🎉 RESULT: 17/17 passed
+```
+
+Tests all provider integrations with live API calls including:
+- Price (BTC, SOL)
+- ATH
+- Movers (CoinGecko degraded, OnChain primary)
+- Symbol resolution (EVM, Solana)
+- Gas (ETH, BSC)
+- Fear & Greed, Trending
+- Security (ETH/Etherscan, SOL/RugCheck)
+- Convert (BTC→ETH)
+
+#### /approve - Approve User (Admin Only)
+
+**Input:**
+```
+/approve <user_id>
+```
+
+Grants access to a user for bot commands.
+
+#### /revoke - Revoke Access (Admin Only)
+
+**Input:**
+```
+/revoke <user_id>
+```
+
+Removes access from a user.
+
+#### /users - List Users (Admin Only)
+
+**Input:**
+```
+/users
+```
+
+Lists all approved users.
+
+#### /checkuser - Check User Status (Admin Only)
+
+**Input:**
+```
+/checkuser <user_id>
+```
+
+Shows access status for a specific user.
+
+#### /payments - View Payments (Admin Only)
+
+**Input:**
+```
+/payments
+```
+
+Shows payment/subscription info (if Stripe integrated).
+
 ---
 
 ## Future Additions
@@ -975,14 +1071,35 @@ Potential features for future development, maintaining the privacy-first design:
 
 ### External API Limits
 
-| Provider | Free Tier | Rate Limit | Reset |
-|----------|-----------|------------|-------|
-| CoinGecko | 10-30 req/min | Per IP | Rolling |
-| CoinCap | 200 req/min | Per IP | Rolling |
-| Binance | 1200 req/min | Per IP | Rolling |
-| Etherscan | 5 req/sec | Per Key/IP | Rolling |
-| BSCScan | 5 req/sec | Per Key/IP | Rolling |
-| PolygonScan | 5 req/sec | Per Key/IP | Rolling |
+| Provider | Purpose | Free Tier | Rate Limit | Avg Latency | Notes |
+|----------|---------|-----------|------------|-------------|-------|
+| **Price Providers** |||||
+| CoinGecko | Prices, ATH, Trending | 10-30/min | Per IP | ~280ms | Primary price source |
+| CoinCap | Price fallback | 200/min | Per IP | ~300ms | No contract lookup |
+| Binance | Price fallback | 1200/min | Per IP | ~150ms | Major pairs only |
+| DexScreener | DEX prices, Symbol resolve | 300/min | Per IP | ~480ms | OnChain data, Solana |
+| **Security Providers** |||||
+| Etherscan V2 | Security, Gas (ETH) | 1/5sec | Per IP (free) | ~600ms | Unified API |
+| Solscan | Solana tokens | 10/sec | Per IP | ~400ms | Public API |
+| RugCheck | Solana security | 60/min | Per IP | ~450ms | Free, no key needed |
+| **Market Data Providers** |||||
+| Alternative.me | Fear & Greed | 60/min | Per IP | ~520ms | Daily updates |
+| Owlracle | Gas (BSC, Polygon) | 60/min | Per IP | ~400ms | Free tier |
+
+### Latency Thresholds
+
+| Threshold | Meaning | Action |
+|-----------|---------|--------|
+| < 1000ms | OK | Normal operation |
+| 1000-3000ms | SLOW | Log warning, continue |
+| > 3000ms | CRITICAL | Circuit breaker, fallback |
+| Timeout (10s) | FAILED | Return error to user |
+
+### Circuit Breaker Settings
+
+- **Failure Threshold**: 3 consecutive failures
+- **Recovery Time**: 30 seconds
+- **Health Check**: Ping on recovery
 
 ### Internal Rate Limits
 
@@ -1002,6 +1119,50 @@ Please wait 30 seconds before trying again.
 
 Limit: 30 commands per minute
 ```
+
+---
+
+## Callback Handlers (Inline Keyboards)
+
+All inline keyboard buttons use a `action:param1:param2` format.
+
+### Callback Actions Reference
+
+| Action | Format | Description | Result |
+|--------|--------|-------------|--------|
+| `refresh` | `refresh:<symbol>:<chain>` | Refresh price | Updates message with fresh price |
+| `price` | `price:<symbol>:<chain>` | Get price | Sends new price card |
+| `alert` | `alert:<symbol>:<chain>` | Set alert hint | Shows alert command format |
+| `alert_remove` | `alert_remove:<id>` | Delete alert | Removes alert from DB |
+| `scan` | `scan:<address>:<chain>` | Security scan | Sends security card |
+| `deployer` | `deployer:<address>:<chain>` | Deployer info | Sends deployer card |
+| `gas` | `gas:<chain>` | Gas prices | Updates message with gas data |
+| `trending` | `trending:refresh` | Trending tokens | Updates message with trending |
+| `fgi` | `fgi:refresh` | Fear & Greed | Updates message with FGI |
+| `gainers` | `gainers:<limit>:<category>` | Top gainers | Updates message with gainers |
+| `losers` | `losers:<limit>:<category>` | Top losers | Updates message with losers |
+| `ath` | `ath:<symbol>` | All-time high | Updates message with ATH |
+| `convert` | `convert:<amt>:<from>:<to>` | Convert | Updates message with conversion |
+| `help` | `help` | Help card | Sends help message |
+| `nav` | `nav:<action>` | Navigation | Routes to sub-action |
+
+### Navigation Sub-Actions
+
+| Nav Action | Result |
+|------------|--------|
+| `nav:price` | Shows /p command help |
+| `nav:gainers` | Shows top 5 gainers |
+| `nav:losers` | Shows top 5 losers |
+| `nav:scan` | Shows /scan command help |
+| `nav:alerts` | Shows /alert command help |
+| `nav:leaderboard` | Shows /lb command help |
+
+### Error Handling
+
+All callbacks have try/catch blocks that:
+1. Show "Error processing request" toast on failure
+2. Log error to server for debugging
+3. Never crash the bot
 
 ---
 
@@ -1256,7 +1417,7 @@ Provider Failure
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| More chains | Solana, Arbitrum, Base, Avalanche support | Medium |
+| More chains | ~~Solana~~ (DONE), Arbitrum, Base, Avalanche support | Medium |
 | Inline keyboard buttons | Refresh, Set Alert, Security buttons on price cards | Low |
 | Webhook mode | Switch from polling to webhooks for lower latency | Low |
 | CoinMarketCap provider | Add CMC as price provider option | Low |
@@ -1297,5 +1458,5 @@ See `src/utils/format.ts` for full implementation.
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: 2024*
+*Document Version: 1.1.0*
+*Last Updated: February 2026*

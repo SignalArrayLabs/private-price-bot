@@ -220,6 +220,18 @@ See `src/tools/env/README.md` for complete validation rules and API reference.
 | `/help` | Show all commands |
 | `/privacy` | Show privacy policy |
 | `/status` | Show bot status |
+| `/whoami` | Show your user info |
+
+### 🔧 Admin Commands (Admin Only)
+
+| Command | Description |
+|---------|-------------|
+| `/selftest` | Run live API tests on all providers |
+| `/approve <user_id>` | Grant user access |
+| `/revoke <user_id>` | Remove user access |
+| `/users` | List approved users |
+| `/checkuser <user_id>` | Check user status |
+| `/payments` | View payment info |
 
 ### Mention Triggering
 
@@ -271,8 +283,11 @@ private-price-bot/
 │   │   ├── commands/         # Command handlers
 │   │   └── middleware/       # Rate limit, privacy
 │   ├── providers/
-│   │   ├── price/            # CoinGecko, CoinCap, Binance
-│   │   └── security/         # Etherscan, Website checker
+│   │   ├── price/            # CoinGecko, CoinCap, Binance, DexScreener
+│   │   ├── security/         # Etherscan, Solscan, RugCheck
+│   │   ├── movers/           # DexScreener (primary), CoinGecko
+│   │   ├── trending/         # CoinGecko
+│   │   └── sentiment/        # alternative.me (Fear & Greed)
 │   ├── services/             # Scheduler, alerts
 │   └── utils/                # Formatting, validation
 ├── tests/                    # Unit & integration tests
@@ -286,14 +301,17 @@ private-price-bot/
 Price providers are tried in order with automatic fallback:
 
 ```
-CoinGecko (primary) → CoinCap → Binance
+CoinGecko (primary) → CoinCap → Binance → DexScreener
 ```
+
+For Solana tokens, DexScreener is used as the primary source.
 
 ### Supported Chains
 
 - Ethereum (ETH)
 - BNB Smart Chain (BSC)
 - Polygon (MATIC)
+- Solana (SOL)
 
 ---
 

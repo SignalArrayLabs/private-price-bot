@@ -450,7 +450,7 @@ export function parseMoversArgs(args: string[]): MoversArgs {
   const defaultLimit = 5;
   const maxLimit = 10;
   let limit = defaultLimit;
-  let category: 'majors' | 'onchain' = 'majors'; // Default to majors
+  let category: 'majors' | 'onchain' = 'onchain'; // Default to onchain (DexScreener primary)
 
   if (args.length === 0) {
     return { limit, category };

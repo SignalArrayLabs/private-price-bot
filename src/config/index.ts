@@ -110,27 +110,31 @@ export const CHAIN_CONFIG: Record<SupportedChain, {
   symbol: string;
   explorer: string;
   explorerApiUrl: string;
+  chainId: number;
   coingeckoId: string;
 }> = {
   ethereum: {
     name: 'Ethereum',
     symbol: 'ETH',
     explorer: 'https://etherscan.io',
-    explorerApiUrl: 'https://api.etherscan.io/api',
+    explorerApiUrl: 'https://api.etherscan.io/v2/api',
+    chainId: 1,
     coingeckoId: 'ethereum',
   },
   bsc: {
     name: 'BNB Smart Chain',
     symbol: 'BNB',
     explorer: 'https://bscscan.com',
-    explorerApiUrl: 'https://api.bscscan.com/api',
+    explorerApiUrl: 'https://api.etherscan.io/v2/api',
+    chainId: 56,
     coingeckoId: 'binance-smart-chain',
   },
   polygon: {
     name: 'Polygon',
     symbol: 'MATIC',
     explorer: 'https://polygonscan.com',
-    explorerApiUrl: 'https://api.polygonscan.com/api',
+    explorerApiUrl: 'https://api.etherscan.io/v2/api',
+    chainId: 137,
     coingeckoId: 'polygon-pos',
   },
   solana: {
@@ -138,6 +142,7 @@ export const CHAIN_CONFIG: Record<SupportedChain, {
     symbol: 'SOL',
     explorer: 'https://solscan.io',
     explorerApiUrl: 'https://public-api.solscan.io',
+    chainId: 0, // Solana is not EVM, no chain ID
     coingeckoId: 'solana',
   },
 };

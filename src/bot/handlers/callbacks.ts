@@ -302,7 +302,7 @@ async function handleFGICallback(ctx: Context): Promise<void> {
 
 async function handleGainersCallback(ctx: Context, params: string[]): Promise<void> {
   const limit = params[0] ? parseInt(params[0], 10) : 5;
-  const category = (params[1] as 'majors' | 'onchain') || 'majors';
+  const category = (params[1] as 'majors' | 'onchain') || 'onchain';
 
   await ctx.answerCallbackQuery({ text: 'Refreshing gainers...' });
 
@@ -354,7 +354,7 @@ async function handleGainersCallback(ctx: Context, params: string[]): Promise<vo
 
 async function handleLosersCallback(ctx: Context, params: string[]): Promise<void> {
   const limit = params[0] ? parseInt(params[0], 10) : 5;
-  const category = (params[1] as 'majors' | 'onchain') || 'majors';
+  const category = (params[1] as 'majors' | 'onchain') || 'onchain';
 
   await ctx.answerCallbackQuery({ text: 'Refreshing losers...' });
 
@@ -510,10 +510,10 @@ async function handleNavCallback(ctx: Context, params: string[]): Promise<void> 
       await ctx.reply('Use: /p &lt;symbol&gt;\nExample: /p BTC', { parse_mode: 'HTML' });
       break;
     case 'gainers':
-      await handleGainersCallback(ctx, ['5', 'majors']);
+      await handleGainersCallback(ctx, ['5', 'onchain']);
       break;
     case 'losers':
-      await handleLosersCallback(ctx, ['5', 'majors']);
+      await handleLosersCallback(ctx, ['5', 'onchain']);
       break;
     case 'scan':
       await ctx.reply('Use: /scan &lt;address&gt; [chain]\nExample: /scan 0x...', { parse_mode: 'HTML' });

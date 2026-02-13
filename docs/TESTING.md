@@ -386,5 +386,39 @@ export const MOCK_CONTRACT = {
 
 ---
 
-*Document Version: 1.0.0*
+## Current Test Status
+
+**Last Run: February 2026**
+
+```
+Test Files  14 passed (14)
+     Tests  177 passed (177)
+  Duration  ~4s
+```
+
+### Test File Breakdown
+
+| Test File | Tests | Status |
+|-----------|-------|--------|
+| price-flow.test.ts | 4 | ✅ |
+| cache.test.ts | 5 | ✅ |
+| access-control.test.ts | 19 | ✅ |
+| format.test.ts | 28 | ✅ |
+| validation.test.ts | 30 | ✅ |
+| new-features.test.ts | 36 | ✅ |
+| onchain-movers.test.ts | 4 | ✅ |
+| dexscreener.test.ts | 6 | ✅ |
+| leaderboard.test.ts | 14 | ✅ |
+| format-pricecard.test.ts | 5 | ✅ |
+| providers.test.ts | 8 | ✅ |
+| onchain-callback.test.ts | 4 | ✅ |
+| callbacks.test.ts | 8 | ✅ |
+| price-command.test.ts | 6 | ✅ |
+
+**Total: 177/177 passing (100%)**
+
+---
+
+*Document Version: 1.1.0*
+*Last Updated: February 2026*
 *References: [PLANNING.md](../PLANNING.md)*
